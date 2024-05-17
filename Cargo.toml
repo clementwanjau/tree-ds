@@ -12,4 +12,10 @@ keywords = ["tree", "data-structures", "rust"]
 categories = ["algorithms", "data-structures"]
 rust-version = "1.71.0"
 
+[features]
+# The default feature is "sync".
+default = []
+# The "async" feature enables the use of the library in asynchronous contexts.
+async = []
+
 [dependencies]
