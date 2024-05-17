@@ -31,7 +31,7 @@ use std::sync::Arc;
 /// let node: Node<i32, i32> = Node::new(1, Some(2));
 /// ```
 #[cfg(not(feature = "async"))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct Node<Q, T>(Rc<RefCell<_Node<Q, T>>>) where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone;
 
 /// A node in a tree.
@@ -61,7 +61,7 @@ pub struct Node<Q, T>(Rc<RefCell<_Node<Q, T>>>) where Q: PartialEq + Eq + Clone,
 /// let node: Node<i32, i32> = Node::new(1, Some(2));
 /// ```
 #[cfg(feature = "async")]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct Node<Q, T>(Arc<RefCell<_Node<Q, T>>>) where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone;
 
 impl<Q, T> Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
@@ -211,7 +211,7 @@ impl<Q, T> Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 	///
 	/// let parent_node = Node::new(1, Some(2));
 	/// let child_node = Node::new(2, Some(3));
-	/// parent_node.add_child(child_node);
+	/// parent_node.add_child(child_node.clone());
 	/// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
 	/// assert!(parent_node.get_parent().is_none());
 	/// ```
@@ -268,7 +268,7 @@ impl<Q, T> PartialEq for Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialE
 	}
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
 	/// The user supplied id of the node.
 	node_id: Q,
