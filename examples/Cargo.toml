@@ -1,0 +1,5 @@
+[workspace]
+members = ["basic_tree"
+
+]
+resolver = "2"
