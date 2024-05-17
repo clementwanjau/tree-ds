@@ -326,11 +326,11 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// Print the tree.
 	///
 	/// This method prints the tree to the standard output.
-	fn print_tree(f: &mut std::fmt::Formatter<'_>, node: &Node<Q, T>, level: usize) -> std::fmt::Result where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display {
+	fn print_tree(f: &mut std::fmt::Formatter<'_>, node: &Node<Q, T>, level: usize) -> std::fmt::Result where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
 		for _ in 0..level {
-			write!(f, " ")?;
+			write!(f, "    ")?;
 		}
-		writeln!(f, "|-> {}", node)?;
+		writeln!(f, "└── {}", node)?;
 		for child in node.get_children() {
 			Tree::print_tree(f, &child, level + 1)?;
 		}
@@ -346,7 +346,7 @@ impl<Q, T> Default for Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq 
 	}
 }
 
-impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display {
+impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(node) = self.get_root_node() {
 			Tree::print_tree(f, &node, 0)?;
@@ -462,12 +462,7 @@ mod tests {
 		tree.add_node(node_4.clone(), Some(2));
 		let node_5 = Node::new(5, Some(6));
 		tree.add_node(node_5.clone(), Some(3));
-		let expected_str = "|-> Node { Id: 1, Value: 2 }
- |-> Node { Id: 2, Value: 3 }
-  |-> Node { Id: 3, Value: 6 }
-   |-> Node { Id: 5, Value: 6 }
-  |-> Node { Id: 4, Value: 5 }
-";
+		let expected_str = "└── 1: 2\n    └── 2: 3\n        └── 3: 6\n            └── 5: 6\n        └── 4: 5\n";
 		assert_eq!(tree.to_string(), expected_str);
 	}
 }
