@@ -323,9 +323,9 @@ impl<Q, T> PartialEq for Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialE
 	}
 }
 
-impl<Q, T> Display for Node<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display {
+impl<Q, T> Display for Node<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "Node {{ Id: {}, Value: {} }}", self.get_node_id(), self.get_value().as_ref().unwrap())
+		write!(f, "{}: {}", self.get_node_id(), self.get_value().as_ref().cloned().unwrap_or_default())
 	}
 }
 
