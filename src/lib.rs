@@ -1,9 +1,10 @@
 //! # Tree-DS
 //! A simple tree data structure implementation in Rust.
 //!
-//! ## Features
-//! - **default**: By default the library is synchronous.
-//! - **async**: Enables support for async operations on the tree.
+//! ## Cargo Features
+//! - `default`: By default the library is synchronous.
+//! - `async`: Enables support for async operations on the tree.
+//! - `serde`: Enables serialization and deserialization of the tree.
 //!
 //! ## Usage
 //!

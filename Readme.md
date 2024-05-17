@@ -62,16 +62,17 @@ fn main() {
 	println!("{}", tree);
 
 
+	// Get the subtree rooted at the equity node.
+	let equity_sub_tree = tree.get_subtree(equity_node, None);
+	println!("Equity Sub Tree");
+	println!("*********************");
+	println!("{}", debt_mutual_funds_sub_tree);
+
+	// Remove the stocks node and all descendants. 
 	tree.remove_node(stocks_node, NodeRemovalStrategy::RemoveNodeAndChildren);
 	println!("After removing Stocks Node");
 	println!("*******************");
 	println!("{}", tree);
-
-
-	let debt_mutual_funds_sub_tree = tree.get_subtree(equity_node, None);
-	println!("Debt Mutual Funds Sub Tree");
-	println!("*********************");
-	println!("{}", debt_mutual_funds_sub_tree);
 }
 
 ```
