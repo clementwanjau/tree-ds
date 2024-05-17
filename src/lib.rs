@@ -16,7 +16,7 @@
 //! let child_1 = tree.add_node(Node::new(2, Some(3)), Some(root));
 //! let child_2 = tree.add_node(Node::new(3, Some(4)), Some(child_1));
 //! let child_3 = tree.add_node(Node::new(4, Some(5)), Some(child_2));
-//! let sub_tree = tree.get_sub_tree(child_2);
+//! let sub_tree = tree.get_subtree(child_2, None);
 //!
 //! ```
 

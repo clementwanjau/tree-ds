@@ -13,9 +13,12 @@ categories = ["algorithms", "data-structures"]
 rust-version = "1.71.0"
 
 [features]
-# The default feature is "sync".
+# By default, the library has no features enabled.
 default = []
 # The "async" feature enables the use of the library in asynchronous contexts.
 async = []
+# The "serde" feature enables serialization and deserialization of the library's types.
+serde = []
 
 [dependencies]
+serde = { version = "1.0", features = ["derive", "rc"] }

@@ -40,7 +40,7 @@ pub struct Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 	nodes: Vec<Node<Q, T>>,
 }
 
-impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
+impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone {
 	/// Create a new tree.
 	///
 	/// This method creates a new tree with no nodes.
@@ -207,8 +207,9 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 	pub fn remove_node(&mut self, node_id: Q, strategy: NodeRemovalStrategy) {
 		match strategy {
 			NodeRemovalStrategy::RetainChildren => {
-				let node = self.nodes.iter().find(|n| n.get_node_id() == node_id).unwrap();
+				let node = self.get_node(node_id.clone()).unwrap();
 				let parent_node = node.get_parent().unwrap();
+				parent_node.remove_child(node.clone());
 				let children = node.get_children();
 				for child in children {
 					parent_node.add_child(child.clone());
@@ -216,10 +217,14 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 				self.nodes.retain(|n| n.get_node_id() != node_id);
 			}
 			NodeRemovalStrategy::RemoveNodeAndChildren => {
-				let node = self.nodes.iter().find(|n| n.get_node_id() == node_id).unwrap();
+				let node = self.get_node(node_id.clone()).unwrap();
 				let children = node.get_children();
+				if let Some(parent) = node.get_parent() {
+					parent.remove_child(node.clone());
+				}
 				self.nodes.retain(|n| n.get_node_id() != node_id);
 				for child in children {
+					node.remove_child(child.clone());
 					self.remove_node(child.get_node_id(), strategy.clone());
 				}
 			}
@@ -261,22 +266,25 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 	/// assert_eq!(subsection.get_nodes().len(), 2);
 	/// ```
 	pub fn get_subtree(&self, node_id: Q, generations: Option<i32>) -> SubTree<Q, T> {
-		let node = self.get_node(node_id).unwrap();
-		let mut subsection = vec![node.clone()];
-		// Get the subsequent children of the node recursively for the number of generations and add them to the subsection.
-		if let Some(generations) = generations {
-			let children = node.get_children();
-			for current_generation in 0..generations {
-				for child in children.clone() {
-					subsection.append(&mut self.get_subtree(child.get_node_id(), Some(current_generation)).get_nodes());
+		let mut subsection = Vec::new();
+		if let Some(node) = self.get_node(node_id) {
+			subsection.push(node.clone());
+			// Get the subsequent children of the node recursively for the number of generations and add them to the subsection.
+			if let Some(generations) = generations {
+				let children = node.get_children();
+				for current_generation in 0..generations {
+					for child in children.clone() {
+						subsection.append(&mut self.get_subtree(child.get_node_id(), Some(current_generation)).get_nodes());
+					}
+				}
+			} else {
+				let children = node.get_children();
+				for child in children {
+					subsection.append(&mut self.get_subtree(child.get_node_id(), None).get_nodes());
 				}
 			}
-		} else {
-			let children = node.get_children();
-			for child in children {
-				subsection.append(&mut self.get_subtree(child.get_node_id(), None).get_nodes());
-			}
 		}
+
 		SubTree {
 			nodes: subsection
 		}
@@ -342,6 +350,9 @@ impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: 
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(node) = self.get_root_node() {
 			Tree::print_tree(f, &node, 0)?;
+		} else {
+			let root = self.nodes.first().unwrap();
+			Tree::print_tree(f, root, 0)?;
 		}
 		Ok(())
 	}

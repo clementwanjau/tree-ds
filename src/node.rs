@@ -5,6 +5,9 @@ use std::rc::Rc;
 #[cfg(feature = "async")]
 use std::sync::Arc;
 
+use serde::{Deserialize, Serialize};
+use serde::ser::SerializeStruct;
+
 /// A node in a tree.
 ///
 /// This struct represents a node in a tree. The node has a unique id, a value, children and a parent. The unique id
@@ -154,6 +157,32 @@ impl<Q, T> Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 		child.parent = Some(self.clone());
 	}
 
+	/// Remove a child from the node.
+	///
+	/// This method removes a child from the node. The child is removed from the children of the node and the parent
+	/// of the child is set to `None`.
+	///
+	/// # Arguments
+	///
+	/// * `child` - The child to remove from the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let parent_node = Node::new(1, Some(2));
+	/// let child_node = Node::new(2, Some(3));
+	/// parent_node.add_child(child_node.clone());
+	/// parent_node.remove_child(child_node);
+	/// ```
+	pub fn remove_child(&self, child: Node<Q, T>) {
+		let mut node = self.0.borrow_mut();
+		node.children.retain(|x| x != &child);
+		let mut child = child.0.borrow_mut();
+		child.parent = None;
+	}
+
 	/// Get the unique Id of the node.
 	///
 	/// This method returns the unique Id of the node. The unique Id is used to identify the node.
@@ -261,6 +290,31 @@ impl<Q, T> Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 	pub fn set_value(&self, value: Option<T>) {
 		self.0.borrow_mut().value = value;
 	}
+
+	/// Set the parent of the node.
+	///
+	/// This method sets the parent of the node.
+	///
+	/// # Arguments
+	///
+	/// * `parent` - The parent to set.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let parent_node = Node::new(1, Some(2));
+	/// let child_node = Node::new(2, Some(3));
+	/// child_node.set_parent(Some(parent_node.clone()));
+	/// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
+	/// ```
+	pub fn set_parent(&self, parent: Option<Node<Q, T>>) {
+		if let Some(parent) = parent.as_ref() {
+			parent.add_child(self.clone());
+		}
+		self.0.borrow_mut().parent = parent;
+	}
 }
 
 impl<Q, T> PartialEq for Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
@@ -275,6 +329,43 @@ impl<Q, T> Display for Node<Q, T> where Q: PartialEq + Eq + Clone + Display, T: 
 	}
 }
 
+#[cfg(feature = "serde")]
+impl<Q, T> Serialize for Node<Q, T> where Q: PartialEq + Eq + Clone + Serialize, T: PartialEq + Eq + Clone + Serialize {
+	fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+		let mut state = serializer.serialize_struct("Node", 4)?;
+		state.serialize_field("node_id", &self.get_node_id())?;
+		state.serialize_field("value", &self.get_value())?;
+		state.serialize_field("children", &self.get_children())?;
+		state.serialize_field("parent", &self.get_parent())?;
+		state.end()
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, Q, T> Deserialize<'de> for Node<Q, T> where Q: PartialEq + Eq + Clone + Deserialize<'de>, T: PartialEq + Eq + Clone + Deserialize<'de> {
+	fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where D: serde::Deserializer<'de> {
+		let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
+		#[cfg(not(feature = "async"))]
+		return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
+		#[cfg(feature = "async")]
+		return Ok(Node(Arc::new(RefCell::new(node))));
+	}
+}
+
+#[cfg(feature = "serde")]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct _Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
+	/// The user supplied id of the node.
+	node_id: Q,
+	/// The value of the node.
+	value: Option<T>,
+	/// The children of the node.
+	children: Vec<Node<Q, T>>,
+	/// The parent of the node.
+	parent: Option<Node<Q, T>>,
+}
+
+#[cfg(not(feature = "serde"))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
 	/// The user supplied id of the node.
