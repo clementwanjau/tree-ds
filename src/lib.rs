@@ -3,8 +3,7 @@ mod node;
 
 pub mod prelude {
 	pub use crate::{
-		node::{Node},
-		tree::{Tree}
+		node::Node,
+		tree::{NodeRemovalStrategy, SubTree, Tree},
 	};
-	
 }

@@ -1,4 +1,25 @@
+use std::fmt::Display;
+
 use crate::prelude::Node;
+
+/// The strategy to use when removing a node from the tree.
+///
+/// This enum represents the strategy to use when removing a node from the tree. The `RetainChildren`
+/// strategy retains the children of the node when the node is removed. The `RemoveNodeAndChildren`
+/// strategy removes the node and its children when the node is removed.
+#[derive(Clone, Debug)]
+pub enum NodeRemovalStrategy {
+	/// Retain the children of the node. This means that the children of the node are attached to the
+	/// parent of the node when the node is removed. So the children of the node become children of the
+	/// parent of the node.
+	RetainChildren,
+	/// Remove the node and all subsequent children. This means that the node and its children are
+	/// removed from the tree when the node is removed. All the subsequent grand children of the node are
+	/// removed from the tree.
+	RemoveNodeAndChildren,
+}
+
+pub type SubTree<Q, T> = Tree<Q, T>;
 
 /// A tree data structure.
 ///
@@ -105,6 +126,208 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 			.iter()
 			.find(|n| n.get_node_id() == node_id).cloned()
 	}
+
+	/// Get the root node of the tree.
+	///
+	/// This method gets the root node of the tree. The root node is the topmost node in the tree. The
+	/// root node has no parent node.
+	///
+	/// # Returns
+	///
+	/// The root node of the tree or `None` if the tree has no root node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Tree};
+	///
+	/// let mut tree: Tree<i32, i32> = Tree::new();
+	///
+	/// let node = Node::new(1, Some(2));
+	/// tree.add_node(node.clone(), None);
+	///
+	/// assert_eq!(tree.get_root_node(), Some(node));
+	/// ```
+	pub fn get_root_node(&self) -> Option<Node<Q, T>> {
+		self.nodes.iter().find(|n| n.get_parent().is_none()).cloned()
+	}
+
+	/// Get the nodes in the tree.
+	///
+	/// This method gets the nodes in the tree.
+	///
+	/// # Returns
+	///
+	/// The nodes in the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Tree};
+	///
+	/// let mut tree: Tree<i32, i32> = Tree::new();
+	///
+	/// let node = Node::new(1, Some(2));
+	/// tree.add_node(node.clone(), None);
+	///
+	/// assert_eq!(tree.get_nodes().len(), 1);
+	/// ```
+	pub fn get_nodes(&self) -> Vec<Node<Q, T>> {
+		self.nodes.clone()
+	}
+
+	/// Remove a node from the tree.
+	///
+	/// This method removes a node from the tree. The node is removed using the given removal strategy.
+	/// The removal strategy determines how the node and its children are removed from the tree. The
+	/// `RetainChildren` strategy retains the children of the node when the node is removed. The
+	/// `RemoveNodeAndChildren` strategy removes the node and its children when the node is removed.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The id of the node to remove.
+	/// * `strategy` - The strategy to use when removing the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Tree, NodeRemovalStrategy};
+	///
+	/// let mut tree: Tree<i32, i32> = Tree::new();
+	///
+	/// let node = Node::new(1, Some(2));
+	/// tree.add_node(node.clone(), None);
+	/// let node_2 = Node::new(2, Some(3));
+	/// tree.add_node(node_2.clone(), Some(1));
+	/// let node_3 = Node::new(3, Some(6));
+	/// tree.add_node(node_3.clone(), Some(2));
+	///
+	/// tree.remove_node(2, NodeRemovalStrategy::RetainChildren);
+	/// assert_eq!(tree.get_nodes().len(), 2);
+	pub fn remove_node(&mut self, node_id: Q, strategy: NodeRemovalStrategy) {
+		match strategy {
+			NodeRemovalStrategy::RetainChildren => {
+				let node = self.nodes.iter().find(|n| n.get_node_id() == node_id).unwrap();
+				let parent_node = node.get_parent().unwrap();
+				let children = node.get_children();
+				for child in children {
+					parent_node.add_child(child.clone());
+				}
+				self.nodes.retain(|n| n.get_node_id() != node_id);
+			}
+			NodeRemovalStrategy::RemoveNodeAndChildren => {
+				let node = self.nodes.iter().find(|n| n.get_node_id() == node_id).unwrap();
+				let children = node.get_children();
+				self.nodes.retain(|n| n.get_node_id() != node_id);
+				for child in children {
+					self.remove_node(child.get_node_id(), strategy.clone());
+				}
+			}
+		}
+	}
+
+	/// Get a subsection of the tree.
+	///
+	/// This method gets a subsection of the tree starting from the node with the given node id. The
+	/// subsection is a list of nodes that are descendants of the node with the given node id upto the
+	/// given number of descendants. If the number of descendants is `None`, all the descendants of the
+	/// node are included in the subsection.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The id of the node to get the subsection from.
+	/// * `generations` - The number of descendants to include in the subsection. If `None`, all the
+	/// descendants of the node are included in the subsection.
+	///
+	/// # Returns
+	///
+	/// The subsection of the tree starting from the node with the given node id.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Tree};
+	///
+	/// # let mut tree: Tree<i32, i32> = Tree::new();
+	///
+	/// let node = Node::new(1, Some(2));
+	/// tree.add_node(node.clone(), None);
+	/// let node_2 = Node::new(2, Some(3));
+	/// tree.add_node(node_2.clone(), Some(1));
+	/// let node_3 = Node::new(3, Some(6));
+	/// tree.add_node(node_3.clone(), Some(2));
+	///
+	/// let subsection = tree.get_subtree(2, None);
+	/// assert_eq!(subsection.get_nodes().len(), 2);
+	/// ```
+	pub fn get_subtree(&self, node_id: Q, generations: Option<i32>) -> SubTree<Q, T> {
+		let node = self.get_node(node_id).unwrap();
+		let mut subsection = vec![node.clone()];
+		// Get the subsequent children of the node recursively for the number of generations and add them to the subsection.
+		if let Some(generations) = generations {
+			let children = node.get_children();
+			for current_generation in 0..generations {
+				for child in children.clone() {
+					subsection.append(&mut self.get_subtree(child.get_node_id(), Some(current_generation)).get_nodes());
+				}
+			}
+		} else {
+			let children = node.get_children();
+			for child in children {
+				subsection.append(&mut self.get_subtree(child.get_node_id(), None).get_nodes());
+			}
+		}
+		SubTree {
+			nodes: subsection
+		}
+	}
+
+	/// Add a subsection to the tree.
+	///
+	/// This method adds a subsection to the tree. The subsection is a list of nodes that are descendants
+	/// of the node with the given node id. The subsection is added as children of the node with the
+	/// given node id.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The id of the node to add the subsection to.
+	/// * `subtree` - The subsection to add to the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Tree, SubTree};
+	///
+	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let node_id = tree.add_node(Node::new(1, Some(2)), None);
+	/// let mut subtree = SubTree::new();
+	/// subtree.add_node(Node::new(2, Some(3)), None);
+	/// subtree.add_node(Node::new(3, Some(6)), Some(2));
+	/// tree.add_subtree(node_id, subtree);
+	/// assert_eq!(tree.get_nodes().len(), 3);
+	/// ```
+	pub fn add_subtree(&mut self, node_id: Q, subtree: SubTree<Q, T>) {
+		let node = self.get_node(node_id).unwrap();
+		// Get the root node in the subsection and add it as a child of the node.
+		let subtree_nodes = subtree.get_nodes();
+		let root_node = subtree.get_root_node().unwrap();
+		node.add_child(root_node.clone());
+		self.nodes.append(&mut subtree_nodes.clone());
+	}
+
+	/// Print the tree.
+	///
+	/// This method prints the tree to the standard output.
+	fn print_tree(f: &mut std::fmt::Formatter<'_>, node: &Node<Q, T>, level: usize) -> std::fmt::Result where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display {
+		for _ in 0..level {
+			write!(f, " ")?;
+		}
+		writeln!(f, "|-> {}", node)?;
+		for child in node.get_children() {
+			Tree::print_tree(f, &child, level + 1)?;
+		}
+		Ok(())
+	}
 }
 
 impl<Q, T> Default for Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
@@ -112,6 +335,15 @@ impl<Q, T> Default for Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq 
 		Tree {
 			nodes: Vec::new(),
 		}
+	}
+}
+
+impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if let Some(node) = self.get_root_node() {
+			Tree::print_tree(f, &node, 0)?;
+		}
+		Ok(())
 	}
 }
 
@@ -131,6 +363,11 @@ mod tests {
 		let node_id = tree.add_node(Node::new(1, Some(2)), None);
 		assert_eq!(tree.nodes.len(), 1);
 		assert_eq!(node_id, 1);
+		let node_id_2 = tree.add_node(Node::new(2, Some(3)), Some(1));
+		assert_eq!(tree.nodes.len(), 2);
+		assert_eq!(node_id_2, 2);
+		let node_2 = tree.get_node(2).unwrap();
+		assert_eq!(node_2.get_parent().unwrap().get_node_id(), 1);
 	}
 
 	#[test]
@@ -140,5 +377,86 @@ mod tests {
 		tree.add_node(node.clone(), None);
 		assert_eq!(tree.get_node(1), Some(node));
 		assert_eq!(tree.get_node(2), None);
+	}
+
+	#[test]
+	fn test_tree_get_nodes() {
+		let mut tree = Tree::new();
+		let node = Node::new(1, Some(2));
+		tree.add_node(node.clone(), None);
+		assert_eq!(tree.get_nodes().len(), 1);
+	}
+
+	#[test]
+	fn test_tree_remove_node() {
+		let mut tree = Tree::new();
+		let node = Node::new(1, Some(2));
+		tree.add_node(node.clone(), None);
+		let node_2 = Node::new(2, Some(3));
+		tree.add_node(node_2.clone(), Some(1));
+		let node_3 = Node::new(3, Some(6));
+		tree.add_node(node_3.clone(), Some(2));
+		tree.remove_node(2, NodeRemovalStrategy::RetainChildren);
+		assert_eq!(tree.get_nodes().len(), 2);
+		let node_4 = Node::new(4, Some(5));
+		let node_5 = Node::new(5, Some(12));
+		tree.add_node(node_4.clone(), Some(3));
+		tree.add_node(node_5.clone(), Some(3));
+		tree.remove_node(3, NodeRemovalStrategy::RemoveNodeAndChildren);
+		assert_eq!(tree.get_nodes().len(), 1);
+	}
+
+	#[test]
+	fn test_tree_get_subsection() {
+		let mut tree = Tree::new();
+		let node = Node::new(1, Some(2));
+		tree.add_node(node.clone(), None);
+		let node_2 = Node::new(2, Some(3));
+		tree.add_node(node_2.clone(), Some(1));
+		let node_3 = Node::new(3, Some(6));
+		tree.add_node(node_3.clone(), Some(2));
+		let node_4 = Node::new(4, Some(5));
+		tree.add_node(node_4.clone(), Some(2));
+		let node_5 = Node::new(5, Some(6));
+		tree.add_node(node_5.clone(), Some(3));
+		let subsection = tree.get_subtree(2, None);
+		assert_eq!(subsection.get_nodes().len(), 4);
+		let subsection = tree.get_subtree(2, Some(0));
+		assert_eq!(subsection.get_nodes().len(), 1);
+		let subsection = tree.get_subtree(2, Some(1));
+		assert_eq!(subsection.get_nodes().len(), 3);
+	}
+
+	#[test]
+	fn test_tree_add_subsection() {
+		let mut tree = Tree::new();
+		let node_id = tree.add_node(Node::new(1, Some(2)), None);
+		let mut subtree = SubTree::new();
+		subtree.add_node(Node::new(2, Some(3)), None);
+		subtree.add_node(Node::new(3, Some(6)), Some(2));
+		tree.add_subtree(node_id, subtree);
+		assert_eq!(tree.get_nodes().len(), 3);
+	}
+
+	#[test]
+	fn test_tree_display() {
+		let mut tree = Tree::new();
+		let node = Node::new(1, Some(2));
+		tree.add_node(node.clone(), None);
+		let node_2 = Node::new(2, Some(3));
+		tree.add_node(node_2.clone(), Some(1));
+		let node_3 = Node::new(3, Some(6));
+		tree.add_node(node_3.clone(), Some(2));
+		let node_4 = Node::new(4, Some(5));
+		tree.add_node(node_4.clone(), Some(2));
+		let node_5 = Node::new(5, Some(6));
+		tree.add_node(node_5.clone(), Some(3));
+		let expected_str = "|-> Node { Id: 1, Value: 2 }
+ |-> Node { Id: 2, Value: 3 }
+  |-> Node { Id: 3, Value: 6 }
+   |-> Node { Id: 5, Value: 6 }
+  |-> Node { Id: 4, Value: 5 }
+";
+		assert_eq!(tree.to_string(), expected_str);
 	}
 }
