@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fmt::Display;
 #[cfg(not(feature = "async"))]
 use std::rc::Rc;
 #[cfg(feature = "async")]
@@ -265,6 +266,12 @@ impl<Q, T> Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone
 impl<Q, T> PartialEq for Node<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
 	fn eq(&self, other: &Self) -> bool {
 		self.get_node_id() == other.get_node_id() && self.get_value() == other.get_value()
+	}
+}
+
+impl<Q, T> Display for Node<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "Node {{ Id: {}, Value: {} }}", self.get_node_id(), self.get_value().as_ref().unwrap())
 	}
 }
 
