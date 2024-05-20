@@ -20,7 +20,7 @@ fn main() {
 
 
 	tree.remove_node(stocks_node, NodeRemovalStrategy::RemoveNodeAndChildren);
-	println!("After removing Stocks Node");
+	println!("After Removing The Stocks Node");
 	println!("*******************");
 	println!("{}", tree);
 

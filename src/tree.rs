@@ -326,13 +326,42 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// Print the tree.
 	///
 	/// This method prints the tree to the standard output.
-	fn print_tree(f: &mut std::fmt::Formatter<'_>, node: &Node<Q, T>, level: usize) -> std::fmt::Result where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
-		for _ in 0..level {
-			write!(f, "    ")?;
+	fn print_tree(f: &mut std::fmt::Formatter<'_>, node: &Node<Q, T>, level: usize, mut is_within: (bool, usize), is_last_child: bool) -> std::fmt::Result where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
+		for x in 1..level {
+			if is_within.0 && x == is_within.1 {
+				write!(f, "│   ")?;
+			} else {
+				write!(f, "    ")?;
+			}
 		}
-		writeln!(f, "└── {}", node)?;
-		for child in node.get_children() {
-			Tree::print_tree(f, &child, level + 1)?;
+		if level > 0 {
+			if is_last_child {
+				writeln!(f, "└── {}", node)?;
+			} else {
+				writeln!(f, "├── {}", node)?;
+			}
+		} else {
+			writeln!(f, "{}", node)?;
+		}
+		let children = node.get_children();
+		let children_count = children.len();
+		for (index, child) in children.iter().enumerate() {
+			let last_item = index == children_count - 1;
+			// Check if parent was last child
+			let is_parent_last_item = if let Some(parent) = node.get_parent() {
+				parent.get_children()
+					  .last().unwrap()
+					  .get_node_id() == node.get_node_id()
+			} else {
+				true
+			};
+			if !is_within.0 {
+				is_within.0 = !is_parent_last_item;
+				is_within.1 = level;
+			} else {
+				is_within.1 = if level > 0 { level - 1 } else { level };
+			}
+			Tree::print_tree(f, child, level + 1, (is_within.0, is_within.1), last_item)?;
 		}
 		Ok(())
 	}
@@ -349,10 +378,10 @@ impl<Q, T> Default for Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq 
 impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(node) = self.get_root_node() {
-			Tree::print_tree(f, &node, 0)?;
+			Tree::print_tree(f, &node, 0, (false, 0), true)?;
 		} else {
 			let root = self.nodes.first().unwrap();
-			Tree::print_tree(f, root, 0)?;
+			Tree::print_tree(f, root, 0, (false, 0), true)?;
 		}
 		Ok(())
 	}
@@ -462,7 +491,7 @@ mod tests {
 		tree.add_node(node_4.clone(), Some(2));
 		let node_5 = Node::new(5, Some(6));
 		tree.add_node(node_5.clone(), Some(3));
-		let expected_str = "└── 1: 2\n    └── 2: 3\n        └── 3: 6\n            └── 5: 6\n        └── 4: 5\n";
+		let expected_str = "1: 2\n└── 2: 3\n    ├── 3: 6\n    │   └── 5: 6\n    └── 4: 5\n";
 		assert_eq!(tree.to_string(), expected_str);
 	}
 }

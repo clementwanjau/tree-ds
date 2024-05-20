@@ -5,7 +5,9 @@ use std::rc::Rc;
 #[cfg(feature = "async")]
 use std::sync::Arc;
 
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde")]
 use serde::ser::SerializeStruct;
 
 /// A node in a tree.
