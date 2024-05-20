@@ -5,6 +5,7 @@ use serde::ser::SerializeStruct;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
+use crate::error::Error::RootNodeAlreadyPresent;
 use crate::prelude::Node;
 
 /// The strategy to use when removing a node from the tree.
@@ -80,7 +81,8 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	///
 	/// # Returns
 	///
-	/// The id of the node that was added to the tree.
+	/// The id of the node that was added to the tree. However, if no parent id is provided and the tree already
+	/// has a root node, an error is returned.
 	///
 	/// # Example
 	///
@@ -88,18 +90,20 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// # use tree_ds::prelude::{Tree, Node};
 	///
 	/// let mut tree: Tree<i32, i32> = Tree::new();
-	/// let node_id = tree.add_node(Node::new(1, Some(2)), None);
+	/// let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// ```
-	pub fn add_node(&mut self, node: Node<Q, T>, parent_id: Option<Q>) -> Q {
+	pub fn add_node(&mut self, node: Node<Q, T>, parent_id: Option<Q>) -> crate::prelude::Result<Q> {
 		if let Some(parent_id) = parent_id {
 			if let Some(parent) = self.nodes
 									  .iter_mut()
 									  .find(|n| n.get_node_id() == parent_id) {
 				parent.add_child(node.clone());
 			}
+		} else if self.get_root_node().is_some() {
+			return Err(RootNodeAlreadyPresent);
 		}
 		self.nodes.push(node.clone());
-		node.get_node_id()
+		Ok(node.get_node_id())
 	}
 
 	/// Get a node in the tree.
@@ -122,7 +126,7 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// let mut tree: Tree<i32, i32> = Tree::new();
 	///
 	/// let node = Node::new(1, Some(2));
-	/// tree.add_node(node.clone(), None);
+	/// tree.add_node(node.clone(), None).unwrap();
 	///
 	/// assert_eq!(tree.get_node(1), Some(node));
 	/// ```
@@ -149,7 +153,7 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// let mut tree: Tree<i32, i32> = Tree::new();
 	///
 	/// let node = Node::new(1, Some(2));
-	/// tree.add_node(node.clone(), None);
+	/// tree.add_node(node.clone(), None).unwrap();
 	///
 	/// assert_eq!(tree.get_root_node(), Some(node));
 	/// ```
@@ -173,7 +177,7 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// let mut tree: Tree<i32, i32> = Tree::new();
 	///
 	/// let node = Node::new(1, Some(2));
-	/// tree.add_node(node.clone(), None);
+	/// tree.add_node(node.clone(), None).unwrap();
 	///
 	/// assert_eq!(tree.get_nodes().len(), 1);
 	/// ```
@@ -201,11 +205,11 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// let mut tree: Tree<i32, i32> = Tree::new();
 	///
 	/// let node = Node::new(1, Some(2));
-	/// tree.add_node(node.clone(), None);
+	/// tree.add_node(node.clone(), None).unwrap();
 	/// let node_2 = Node::new(2, Some(3));
-	/// tree.add_node(node_2.clone(), Some(1));
+	/// tree.add_node(node_2.clone(), Some(1)).unwrap();
 	/// let node_3 = Node::new(3, Some(6));
-	/// tree.add_node(node_3.clone(), Some(2));
+	/// tree.add_node(node_3.clone(), Some(2)).unwrap();
 	///
 	/// tree.remove_node(2, NodeRemovalStrategy::RetainChildren);
 	/// assert_eq!(tree.get_nodes().len(), 2);
@@ -261,11 +265,11 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// # let mut tree: Tree<i32, i32> = Tree::new();
 	///
 	/// let node = Node::new(1, Some(2));
-	/// tree.add_node(node.clone(), None);
+	/// tree.add_node(node.clone(), None).unwrap();
 	/// let node_2 = Node::new(2, Some(3));
-	/// tree.add_node(node_2.clone(), Some(1));
+	/// tree.add_node(node_2.clone(), Some(1)).unwrap();
 	/// let node_3 = Node::new(3, Some(6));
-	/// tree.add_node(node_3.clone(), Some(2));
+	/// tree.add_node(node_3.clone(), Some(2)).unwrap();
 	///
 	/// let subsection = tree.get_subtree(2, None);
 	/// assert_eq!(subsection.get_nodes().len(), 2);
@@ -312,10 +316,10 @@ impl<Q, T> Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + 
 	/// # use tree_ds::prelude::{Node, Tree, SubTree};
 	///
 	/// let mut tree: Tree<i32, i32> = Tree::new();
-	/// let node_id = tree.add_node(Node::new(1, Some(2)), None);
+	/// let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let mut subtree = SubTree::new();
-	/// subtree.add_node(Node::new(2, Some(3)), None);
-	/// subtree.add_node(Node::new(3, Some(6)), Some(2));
+	/// subtree.add_node(Node::new(2, Some(3)), None).unwrap();
+	/// subtree.add_node(Node::new(3, Some(6)), Some(2)).unwrap();
 	/// tree.add_subtree(node_id, subtree);
 	/// assert_eq!(tree.get_nodes().len(), 3);
 	/// ```
@@ -414,10 +418,10 @@ mod tests {
 	#[test]
 	fn test_tree_add_node() {
 		let mut tree = Tree::new();
-		let node_id = tree.add_node(Node::new(1, Some(2)), None);
+		let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		assert_eq!(tree.nodes.len(), 1);
 		assert_eq!(node_id, 1);
-		let node_id_2 = tree.add_node(Node::new(2, Some(3)), Some(1));
+		let node_id_2 = tree.add_node(Node::new(2, Some(3)), Some(1)).unwrap();
 		assert_eq!(tree.nodes.len(), 2);
 		assert_eq!(node_id_2, 2);
 		let node_2 = tree.get_node(2).unwrap();
@@ -428,7 +432,7 @@ mod tests {
 	fn test_tree_get_node() {
 		let mut tree = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree.add_node(node.clone(), None);
+		tree.add_node(node.clone(), None).unwrap();
 		assert_eq!(tree.get_node(1), Some(node));
 		assert_eq!(tree.get_node(2), None);
 	}
@@ -437,7 +441,7 @@ mod tests {
 	fn test_tree_get_nodes() {
 		let mut tree = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree.add_node(node.clone(), None);
+		tree.add_node(node.clone(), None).unwrap();
 		assert_eq!(tree.get_nodes().len(), 1);
 	}
 
@@ -445,17 +449,17 @@ mod tests {
 	fn test_tree_remove_node() {
 		let mut tree = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree.add_node(node.clone(), None);
+		tree.add_node(node.clone(), None).unwrap();
 		let node_2 = Node::new(2, Some(3));
-		tree.add_node(node_2.clone(), Some(1));
+		tree.add_node(node_2.clone(), Some(1)).unwrap();
 		let node_3 = Node::new(3, Some(6));
-		tree.add_node(node_3.clone(), Some(2));
+		tree.add_node(node_3.clone(), Some(2)).unwrap();
 		tree.remove_node(2, NodeRemovalStrategy::RetainChildren);
 		assert_eq!(tree.get_nodes().len(), 2);
 		let node_4 = Node::new(4, Some(5));
 		let node_5 = Node::new(5, Some(12));
-		tree.add_node(node_4.clone(), Some(3));
-		tree.add_node(node_5.clone(), Some(3));
+		tree.add_node(node_4.clone(), Some(3)).unwrap();
+		tree.add_node(node_5.clone(), Some(3)).unwrap();
 		tree.remove_node(3, NodeRemovalStrategy::RemoveNodeAndChildren);
 		assert_eq!(tree.get_nodes().len(), 1);
 	}
@@ -464,15 +468,15 @@ mod tests {
 	fn test_tree_get_subsection() {
 		let mut tree = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree.add_node(node.clone(), None);
+		tree.add_node(node.clone(), None).unwrap();
 		let node_2 = Node::new(2, Some(3));
-		tree.add_node(node_2.clone(), Some(1));
+		tree.add_node(node_2.clone(), Some(1)).unwrap();
 		let node_3 = Node::new(3, Some(6));
-		tree.add_node(node_3.clone(), Some(2));
+		tree.add_node(node_3.clone(), Some(2)).unwrap();
 		let node_4 = Node::new(4, Some(5));
-		tree.add_node(node_4.clone(), Some(2));
+		tree.add_node(node_4.clone(), Some(2)).unwrap();
 		let node_5 = Node::new(5, Some(6));
-		tree.add_node(node_5.clone(), Some(3));
+		tree.add_node(node_5.clone(), Some(3)).unwrap();
 		let subsection = tree.get_subtree(2, None);
 		assert_eq!(subsection.get_nodes().len(), 4);
 		let subsection = tree.get_subtree(2, Some(0));
@@ -484,10 +488,10 @@ mod tests {
 	#[test]
 	fn test_tree_add_subsection() {
 		let mut tree = Tree::new();
-		let node_id = tree.add_node(Node::new(1, Some(2)), None);
+		let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let mut subtree = SubTree::new();
-		subtree.add_node(Node::new(2, Some(3)), None);
-		subtree.add_node(Node::new(3, Some(6)), Some(2));
+		subtree.add_node(Node::new(2, Some(3)), None).unwrap();
+		subtree.add_node(Node::new(3, Some(6)), Some(2)).unwrap();
 		tree.add_subtree(node_id, subtree);
 		assert_eq!(tree.get_nodes().len(), 3);
 	}
@@ -496,15 +500,15 @@ mod tests {
 	fn test_tree_display() {
 		let mut tree = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree.add_node(node.clone(), None);
+		tree.add_node(node.clone(), None).unwrap();
 		let node_2 = Node::new(2, Some(3));
-		tree.add_node(node_2.clone(), Some(1));
+		tree.add_node(node_2.clone(), Some(1)).unwrap();
 		let node_3 = Node::new(3, Some(6));
-		tree.add_node(node_3.clone(), Some(2));
+		tree.add_node(node_3.clone(), Some(2)).unwrap();
 		let node_4 = Node::new(4, Some(5));
-		tree.add_node(node_4.clone(), Some(2));
+		tree.add_node(node_4.clone(), Some(2)).unwrap();
 		let node_5 = Node::new(5, Some(6));
-		tree.add_node(node_5.clone(), Some(3));
+		tree.add_node(node_5.clone(), Some(3)).unwrap();
 		let expected_str = "1: 2\n└── 2: 3\n    ├── 3: 6\n    │   └── 5: 6\n    └── 4: 5\n";
 		assert_eq!(tree.to_string(), expected_str);
 	}
@@ -513,26 +517,26 @@ mod tests {
 	fn compare_tree() {
 		let mut tree = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree.add_node(node.clone(), None);
+		tree.add_node(node.clone(), None).unwrap();
 		let node_2 = Node::new(2, Some(3));
-		tree.add_node(node_2.clone(), Some(1));
+		tree.add_node(node_2.clone(), Some(1)).unwrap();
 		let node_3 = Node::new(3, Some(6));
-		tree.add_node(node_3.clone(), Some(2));
+		tree.add_node(node_3.clone(), Some(2)).unwrap();
 		let node_4 = Node::new(4, Some(5));
-		tree.add_node(node_4.clone(), Some(2));
+		tree.add_node(node_4.clone(), Some(2)).unwrap();
 		let node_5 = Node::new(5, Some(6));
-		tree.add_node(node_5.clone(), Some(3));
+		tree.add_node(node_5.clone(), Some(3)).unwrap();
 		let mut tree_2 = Tree::new();
 		let node = Node::new(1, Some(2));
-		tree_2.add_node(node.clone(), None);
+		tree_2.add_node(node.clone(), None).unwrap();
 		let node_2 = Node::new(2, Some(3));
-		tree_2.add_node(node_2.clone(), Some(1));
+		tree_2.add_node(node_2.clone(), Some(1)).unwrap();
 		let node_3 = Node::new(3, Some(6));
-		tree_2.add_node(node_3.clone(), Some(2));
+		tree_2.add_node(node_3.clone(), Some(2)).unwrap();
 		let node_4 = Node::new(4, Some(5));
-		tree_2.add_node(node_4.clone(), Some(2));
+		tree_2.add_node(node_4.clone(), Some(2)).unwrap();
 		let node_5 = Node::new(5, Some(6));
-		tree_2.add_node(node_5.clone(), Some(3));
+		tree_2.add_node(node_5.clone(), Some(3)).unwrap();
 		assert_eq!(tree, tree_2);
 	}
 }
