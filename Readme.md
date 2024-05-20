@@ -62,20 +62,59 @@ fn main() {
 	println!("{}", tree);
 
 
-	// Get the subtree rooted at the equity node.
-	let equity_sub_tree = tree.get_subtree(equity_node, None);
-	println!("Equity Sub Tree");
-	println!("*********************");
-	println!("{}", debt_mutual_funds_sub_tree);
-
-	// Remove the stocks node and all descendants. 
 	tree.remove_node(stocks_node, NodeRemovalStrategy::RemoveNodeAndChildren);
-	println!("After removing Stocks Node");
+	println!("After Removing The Stocks Node");
 	println!("*******************");
 	println!("{}", tree);
+
+
+	let debt_mutual_funds_sub_tree = tree.get_subtree(equity_node, None);
+	println!("Debt Mutual Funds Sub Tree");
+	println!("*********************");
+	println!("{}", debt_mutual_funds_sub_tree);
 }
 
 ```
+
+This will output:
+
+```
+Original Tree
+*********************
+Risk: 5000
+├── Fixed Income: 2000
+│   └── Debt: 1000
+│       └── Debt Mutual Funds: 500
+└── Equity: 3000
+    ├── Mutual Funds: 1000
+    │   └── Equity Mutual Funds: 500
+    └── Stocks: 2000
+        ├── Large Cap Stocks: 1000
+        ├── Mid Cap Stocks: 1000
+        └── Small Cap Stocks: 1000
+
+After Removing The Stocks Node
+*******************
+Risk: 5000
+├── Fixed Income: 2000
+│   └── Debt: 1000
+│       └── Debt Mutual Funds: 500
+└── Equity: 3000
+    └── Mutual Funds: 1000
+        └── Equity Mutual Funds: 500
+
+Debt Mutual Funds Sub Tree
+*********************
+Equity: 3000
+└── Mutual Funds: 1000
+    └── Equity Mutual Funds: 500
+```
+
+## Roadmap
+
+- Add support for more tree operations.
+- Add a macro to create trees from a DSL.
+- Add support for weighted nodes.
 
 ## License
 
