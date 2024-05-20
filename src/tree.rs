@@ -494,4 +494,31 @@ mod tests {
 		let expected_str = "1: 2\n└── 2: 3\n    ├── 3: 6\n    │   └── 5: 6\n    └── 4: 5\n";
 		assert_eq!(tree.to_string(), expected_str);
 	}
+
+	#[test]
+	fn compare_tree() {
+		let mut tree = Tree::new();
+		let node = Node::new(1, Some(2));
+		tree.add_node(node.clone(), None);
+		let node_2 = Node::new(2, Some(3));
+		tree.add_node(node_2.clone(), Some(1));
+		let node_3 = Node::new(3, Some(6));
+		tree.add_node(node_3.clone(), Some(2));
+		let node_4 = Node::new(4, Some(5));
+		tree.add_node(node_4.clone(), Some(2));
+		let node_5 = Node::new(5, Some(6));
+		tree.add_node(node_5.clone(), Some(3));
+		let mut tree_2 = Tree::new();
+		let node = Node::new(1, Some(2));
+		tree_2.add_node(node.clone(), None);
+		let node_2 = Node::new(2, Some(3));
+		tree_2.add_node(node_2.clone(), Some(1));
+		let node_3 = Node::new(3, Some(6));
+		tree_2.add_node(node_3.clone(), Some(2));
+		let node_4 = Node::new(4, Some(5));
+		tree_2.add_node(node_4.clone(), Some(2));
+		let node_5 = Node::new(5, Some(6));
+		tree_2.add_node(node_5.clone(), Some(3));
+		assert_eq!(tree, tree_2);
+	}
 }

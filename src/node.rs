@@ -333,7 +333,7 @@ impl<Q, T> Display for Node<Q, T> where Q: PartialEq + Eq + Clone + Display, T: 
 
 #[cfg(feature = "serde")]
 impl<Q, T> Serialize for Node<Q, T> where Q: PartialEq + Eq + Clone + Serialize, T: PartialEq + Eq + Clone + Serialize {
-	fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
 		let mut state = serializer.serialize_struct("Node", 4)?;
 		state.serialize_field("node_id", &self.get_node_id())?;
 		state.serialize_field("value", &self.get_value())?;
@@ -345,7 +345,7 @@ impl<Q, T> Serialize for Node<Q, T> where Q: PartialEq + Eq + Clone + Serialize,
 
 #[cfg(feature = "serde")]
 impl<'de, Q, T> Deserialize<'de> for Node<Q, T> where Q: PartialEq + Eq + Clone + Deserialize<'de>, T: PartialEq + Eq + Clone + Deserialize<'de> {
-	fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error> where D: serde::Deserializer<'de> {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de> {
 		let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
 		#[cfg(not(feature = "async"))]
 		return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
@@ -419,5 +419,29 @@ mod tests {
 		assert_eq!(node.get_value(), Some(2));
 		node.set_value(Some(3));
 		assert_eq!(node.get_value(), Some(3));
+	}
+
+	#[test]
+	fn test_node_set_parent() {
+		let parent_node = Node::new(1, Some(2));
+		let child_node = Node::new(2, Some(3));
+		child_node.set_parent(Some(parent_node.clone()));
+		assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
+	}
+
+	#[test]
+	fn test_node_remove_child() {
+		let parent_node = Node::new(1, Some(2));
+		let child_node = Node::new(2, Some(3));
+		parent_node.add_child(child_node.clone());
+		parent_node.remove_child(child_node);
+		assert_eq!(parent_node.get_children().len(), 0);
+	}
+
+	#[test]
+	fn test_node_eq() {
+		let node1 = Node::new(1, Some(2));
+		let node2 = Node::new(1, Some(2));
+		assert_eq!(node1, node2);
 	}
 }
