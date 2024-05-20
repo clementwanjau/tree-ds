@@ -1,5 +1,10 @@
 use std::fmt::Display;
 
+#[cfg(feature = "serde")]
+use serde::ser::SerializeStruct;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use crate::prelude::Node;
 
 /// The strategy to use when removing a node from the tree.
@@ -384,6 +389,15 @@ impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: 
 			Tree::print_tree(f, root, 0, (false, 0), true)?;
 		}
 		Ok(())
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<Q, T> Serialize for Tree<Q, T> where Q: PartialEq + Eq + Clone + Serialize, T: PartialEq + Eq + Clone + Serialize {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+		let mut serialized_struct = serializer.serialize_struct("Tree", 1)?;
+		serialized_struct.serialize_field("nodes", &self.nodes)?;
+		serialized_struct.end()
 	}
 }
 

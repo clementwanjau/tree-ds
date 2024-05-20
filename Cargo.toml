@@ -18,7 +18,8 @@ default = []
 # The "async" feature enables the use of the library in asynchronous contexts.
 async = []
 # The "serde" feature enables serialization and deserialization of the library's types.
-serde = []
+serde = ["dep:serde"]
 
 [dependencies]
-serde = { version = "1.0", features = ["derive", "rc"] }
+serde = { version = "1.0", optional = true, features = ["derive", "rc"] }
+
