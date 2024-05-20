@@ -25,8 +25,8 @@ fn main() {
 	println!("{}", tree);
 
 
-	let debt_mutual_funds_sub_tree = tree.get_subtree(equity_node, None);
-	println!("Debt Mutual Funds Sub Tree");
+	let equity_sub_tree = tree.get_subtree(equity_node, None);
+	println!("Equity Sub Tree");
 	println!("*********************");
-	println!("{}", debt_mutual_funds_sub_tree);
+	println!("{}", equity_sub_tree);
 }
