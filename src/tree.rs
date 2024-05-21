@@ -1,9 +1,10 @@
 use std::fmt::Display;
 
 #[cfg(feature = "serde")]
-use serde::ser::SerializeStruct;
-#[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{
+	Deserialize, ser::SerializeStruct,
+	Serialize, Serializer,
+};
 
 use crate::error::Error::RootNodeAlreadyPresent;
 use crate::prelude::Node;
@@ -26,6 +27,7 @@ pub enum NodeRemovalStrategy {
 }
 
 pub type SubTree<Q, T> = Tree<Q, T>;
+
 
 /// A tree data structure.
 ///
@@ -396,12 +398,33 @@ impl<Q, T> Display for Tree<Q, T> where Q: PartialEq + Eq + Clone + Display, T: 
 	}
 }
 
+impl<Q, T> Drop for Tree<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
+	fn drop(&mut self) {
+		self.nodes.clear();
+	}
+}
+
 #[cfg(feature = "serde")]
 impl<Q, T> Serialize for Tree<Q, T> where Q: PartialEq + Eq + Clone + Serialize, T: PartialEq + Eq + Clone + Serialize {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
-		let mut serialized_struct = serializer.serialize_struct("Tree", 1)?;
-		serialized_struct.serialize_field("nodes", &self.nodes)?;
-		serialized_struct.end()
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+		let mut s = serializer.serialize_struct("Tree", 1)?;
+		s.serialize_field("nodes", &self.nodes)?;
+		s.end()
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de, Q, T> Deserialize<'de> for Tree<Q, T> where Q: PartialEq + Eq + Clone + Deserialize<'de>, T: PartialEq + Eq + Clone + Deserialize<'de> {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de> {
+		#[derive(Deserialize)]
+		struct TreeHelper<Q, T> where Q: PartialEq + Eq + Clone, T: PartialEq + Eq + Clone {
+			nodes: Vec<Node<Q, T>>,
+		}
+
+		let tree_helper = TreeHelper::deserialize(deserializer)?;
+		Ok(Tree {
+			nodes: tree_helper.nodes,
+		})
 	}
 }
 
@@ -538,5 +561,31 @@ mod tests {
 		let node_5 = Node::new(5, Some(6));
 		tree_2.add_node(node_5.clone(), Some(3)).unwrap();
 		assert_eq!(tree, tree_2);
+	}
+
+	#[cfg(feature = "serde")]
+	#[test]
+	#[ignore]
+	fn test_tree_serialize() {
+		let mut tree = Tree::new();
+		tree.add_node(Node::new(1, Some(2)), None).unwrap();
+		tree.add_node(Node::new(2, Some(3)), Some(1)).unwrap();
+		tree.add_node(Node::new(3, Some(6)), Some(2)).unwrap();
+		tree.add_node(Node::new(4, Some(5)), Some(2)).unwrap();
+		tree.add_node(Node::new(5, Some(6)), Some(3)).unwrap();
+		let serialized = serde_json::to_string(&tree).unwrap();
+		let expected = r#"{"nodes":[{"node_id":1,"value":2,"parent":null,"children":[2]},{"node_id":2,"value":3,"parent":1,"children":[3,4]},{"node_id":3,"value":6,"parent":2,"children":[5]},{"node_id":4,"value":5,"parent":2,"children":[]},{"node_id":5,"value":6,"parent":3,"children":[]}]}"#;
+		assert_eq!(serialized, expected);
+	}
+
+	#[cfg(feature = "serde")]
+	#[test]
+	#[ignore]
+	fn test_tree_deserialize() {
+		println!("Testing tree deserialization");
+		let serialized = r#"{"nodes":[{"node_id":1,"value":2,"parent":null,"children":[2]},{"node_id":2,"value":3,"parent":1,"children":[3,4]},{"node_id":3,"value":6,"parent":2,"children":[5]},{"node_id":4,"value":5,"parent":2,"children":[]},{"node_id":5,"value":6,"parent":3,"children":[]}], "root": 1}"#;
+		let tree: Tree<u32, u32> = serde_json::from_str(serialized).unwrap();
+		println!("{}", tree);
+		assert_eq!(tree.nodes.len(), 5);
 	}
 }

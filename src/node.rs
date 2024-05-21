@@ -444,4 +444,27 @@ mod tests {
 		let node2 = Node::new(1, Some(2));
 		assert_eq!(node1, node2);
 	}
+
+	#[test]
+	fn test_node_display() {
+		let node = Node::new(1, Some(2));
+		assert_eq!(format!("{}", node), "1: 2");
+	}
+
+	#[cfg(feature = "serde")]
+	#[test]
+	fn test_node_serialize() {
+		let node = Node::new(1, Some(2));
+		let serialized = serde_json::to_string(&node).unwrap();
+		assert_eq!(serialized, r#"{"node_id":1,"value":2,"children":[],"parent":null}"#);
+	}
+
+	#[cfg(feature = "serde")]
+	#[test]
+	fn test_node_deserialize() {
+		let node = Node::new(1, Some(2));
+		let serialized = serde_json::to_string(&node).unwrap();
+		let deserialized: Node<i32, i32> = serde_json::from_str(&serialized).unwrap();
+		assert_eq!(node, deserialized);
+	}
 }
