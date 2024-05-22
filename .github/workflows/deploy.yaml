@@ -13,7 +13,7 @@ jobs:
       - name: Build
         run: cargo build --release
       - name: Test
-        run: cargo test --verbose
+        run: cargo test --all-features
       - name: Publish
         run: cargo publish
         env:
