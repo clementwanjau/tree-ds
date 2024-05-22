@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::fmt::Display;
+use std::fmt::{Display};
 #[cfg(not(feature = "async"))]
 use std::rc::Rc;
 #[cfg(feature = "async")]
@@ -163,10 +163,13 @@ where
     /// parent_node.add_child(Node::new(2, Some(3)));
     /// ```
     pub fn add_child(&self, child: Node<Q, T>) {
-        let mut node = self.0.borrow_mut();
-        node.children.push(child.clone());
+        {
+            // This block is to ensure that the borrow_mut() is dropped before the next borrow_mut() call.
+            let mut node = self.0.borrow_mut();
+            node.children.push(child.get_node_id());
+        }
         let mut child = child.0.borrow_mut();
-        child.parent = Some(self.clone());
+        child.parent = Some(self.get_node_id());
     }
 
     /// Remove a child from the node.
@@ -190,7 +193,7 @@ where
     /// ```
     pub fn remove_child(&self, child: Node<Q, T>) {
         let mut node = self.0.borrow_mut();
-        node.children.retain(|x| x != &child);
+        node.children.retain(|x| x != &child.get_node_id());
         let mut child = child.0.borrow_mut();
         child.parent = None;
     }
@@ -233,18 +236,18 @@ where
     /// node.add_child(child);
     /// assert_eq!(node.get_children().len(), 1);
     /// ```
-    pub fn get_children(&self) -> Vec<Node<Q, T>> {
+    pub fn get_children(&self) -> Vec<Q> {
         self.0.borrow().children.clone()
     }
 
-    /// Get the parent of the node.
+    /// Get the node id of the parent of the node.
     ///
-    /// This method returns the parent of the node. In the case where the node is a root node in a tree,
+    /// This method returns the node_id of the parent of the node. In the case where the node is a root node in a tree,
     /// the parent of the node will be `None`.
     ///
     /// # Returns
     ///
-    /// The optional parent of the node.
+    /// The optional node_id of the parent of the node.
     ///
     /// # Example
     ///
@@ -254,10 +257,10 @@ where
     /// let parent_node = Node::new(1, Some(2));
     /// let child_node = Node::new(2, Some(3));
     /// parent_node.add_child(child_node.clone());
-    /// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
+    /// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
     /// assert!(parent_node.get_parent().is_none());
     /// ```
-    pub fn get_parent(&self) -> Option<Node<Q, T>> {
+    pub fn get_parent(&self) -> Option<Q> {
         self.0.borrow().parent.clone()
     }
 
@@ -319,13 +322,13 @@ where
     /// let parent_node = Node::new(1, Some(2));
     /// let child_node = Node::new(2, Some(3));
     /// child_node.set_parent(Some(parent_node.clone()));
-    /// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
+    /// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
     /// ```
     pub fn set_parent(&self, parent: Option<Node<Q, T>>) {
         if let Some(parent) = parent.as_ref() {
             parent.add_child(self.clone());
         }
-        self.0.borrow_mut().parent = parent;
+        self.0.borrow_mut().parent = parent.map(|x| x.get_node_id());
     }
 }
 
@@ -383,7 +386,88 @@ where
     where
         D: serde::Deserializer<'de>,
     {
+        // struct NodeVisitor<Q, T> {
+        //     _phantom: std::marker::PhantomData<(Q, T)>,
+        // }
+        // 
+        // #[derive(Deserialize)]
+        // struct InnerNode<Q, T> {
+        //     node_id: Q,
+        //     value: Option<T>,
+        //     children: Vec<Q>,
+        //     parent: Option<Q>,
+        // }
+        // 
+        // impl<'de, Q, T> Visitor<'de> for NodeVisitor<Q, T> where Q: Deserialize<'de>, T: Deserialize<'de>{
+        //     type Value = InnerNode<Q, T>;
+        // 
+        //     fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        //         formatter.write_str("struct InnerNode")
+        //     }
+        // 
+        //     fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error> where A: MapAccess<'de> {
+        //         let mut node_id = None;
+        //         let mut value = None;
+        //         let mut children = None;
+        //         let mut parent = None;
+        // 
+        //         while let Some(key) = map.next_key()? {
+        //             match key {
+        //                 "node_id" => {
+        //                     if node_id.is_some() {
+        //                         return Err(serde::de::Error::duplicate_field("node_id"));
+        //                     }
+        //                     node_id = Some(map.next_value()?);
+        //                 }
+        //                 "value" => {
+        //                     if value.is_some() {
+        //                         return Err(serde::de::Error::duplicate_field("value"));
+        //                     }
+        //                     value = Some(map.next_value()?);
+        //                 }
+        //                 "children" => {
+        //                     if children.is_some() {
+        //                         return Err(serde::de::Error::duplicate_field("children"));
+        //                     }
+        //                     children = Some(map.next_value()?);
+        //                 }
+        //                 "parent" => {
+        //                     if parent.is_some() {
+        //                         return Err(serde::de::Error::duplicate_field("parent"));
+        //                     }
+        //                     parent = Some(map.next_value()?);
+        //                 }
+        //                 _ => {
+        //                     return Err(serde::de::Error::unknown_field(key, &["node_id", "value", "children", "parent"]));
+        //                 }
+        //             }
+        //         }
+        // 
+        //         let node_id = node_id.ok_or_else(|| serde::de::Error::missing_field("node_id"))?;
+        //         let value = value.ok_or_else(|| serde::de::Error::missing_field("value"))?;
+        //         let children = children.ok_or_else(|| serde::de::Error::missing_field("children"))?;
+        //         let parent = parent.ok_or_else(|| serde::de::Error::missing_field("parent"))?;
+        // 
+        //         Ok(InnerNode {
+        //             node_id,
+        //             value,
+        //             children,
+        //             parent,
+        //         })
+        //     }
+        // }
+        // 
+        // let inner_node: InnerNode<Q, T> = Deserialize::deserialize(deserializer)?;
+        // 
+        // let node = _Node {
+        //     node_id: inner_node.node_id,
+        //     value: inner_node.value,
+        //     children: vec![],
+        //     parent: None,
+        // };
+        
         let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
+
         #[cfg(not(feature = "async"))]
         return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
         #[cfg(feature = "async")]
@@ -403,9 +487,9 @@ where
     /// The value of the node.
     value: Option<T>,
     /// The children of the node.
-    children: Vec<Node<Q, T>>,
+    children: Vec<Q>,
     /// The parent of the node.
-    parent: Option<Node<Q, T>>,
+    parent: Option<Q>,
 }
 
 #[cfg(not(feature = "serde"))]
@@ -448,7 +532,7 @@ mod tests {
         let parent_node = Node::new(1, Some(2));
         let child_node = Node::new(2, Some(3));
         parent_node.add_child(child_node.clone());
-        assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
+        assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
         assert!(parent_node.get_parent().is_none());
     }
 
@@ -471,7 +555,7 @@ mod tests {
         let parent_node = Node::new(1, Some(2));
         let child_node = Node::new(2, Some(3));
         child_node.set_parent(Some(parent_node.clone()));
-        assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node));
+        assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
     }
 
     #[test]

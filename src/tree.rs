@@ -3,8 +3,8 @@ use std::fmt::Display;
 #[cfg(feature = "serde")]
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
-use crate::error::Error::RootNodeAlreadyPresent;
-use crate::prelude::Node;
+use crate::error::Error::{InvalidOperation, RootNodeAlreadyPresent};
+use crate::prelude::{Node};
 
 /// The strategy to use when removing a node from the tree.
 ///
@@ -104,7 +104,7 @@ where
         parent_id: Option<&Q>,
     ) -> crate::prelude::Result<Q> {
         if let Some(parent_id) = parent_id {
-            if let Some(parent) = self.nodes.iter_mut().find(|n| &n.get_node_id() == parent_id) {
+            if let Some(parent) = self.nodes.iter().find(|n| &n.get_node_id() == parent_id) {
                 parent.add_child(node.clone());
             }
         } else if self.get_root_node().is_some() {
@@ -220,31 +220,39 @@ where
     /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
     /// tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
     ///
-    /// tree.remove_node(&node_2, NodeRemovalStrategy::RetainChildren);
+    /// tree.remove_node(&node_2, NodeRemovalStrategy::RetainChildren).unwrap();
     /// assert_eq!(tree.get_nodes().len(), 2);
-    pub fn remove_node(&mut self, node_id: &Q, strategy: NodeRemovalStrategy) {
+    pub fn remove_node(&mut self, node_id: &Q, strategy: NodeRemovalStrategy) -> crate::prelude::Result<()> {
         match strategy {
             NodeRemovalStrategy::RetainChildren => {
                 let node = self.get_node(node_id).unwrap();
-                let parent_node = node.get_parent().unwrap();
-                parent_node.remove_child(node.clone());
-                let children = node.get_children();
-                for child in children {
-                    parent_node.add_child(child.clone());
+                if let Some(parent_node_id) = &node.get_parent(){
+                    let parent_node = self.get_node(parent_node_id).unwrap();
+                    parent_node.remove_child(node.clone());
+                    let children = node.get_children();
+                    for child in children {
+                        parent_node.add_child(self.get_node(&child).unwrap());
+                    }
+                    self.nodes.retain(|n| &n.get_node_id() != node_id);
+                } else { 
+                    return Err(InvalidOperation("Cannot remove root node with RetainChildren strategy".to_string()));
                 }
-                self.nodes.retain(|n| &n.get_node_id() != node_id);
+                Ok(())
             }
             NodeRemovalStrategy::RemoveNodeAndChildren => {
                 let node = self.get_node(node_id).unwrap();
                 let children = node.get_children();
-                if let Some(parent) = node.get_parent() {
+                if let Some(parent_id) = node.get_parent() {
+                    let parent = self.get_node(&parent_id).unwrap();
                     parent.remove_child(node.clone());
                 }
                 self.nodes.retain(|n| &n.get_node_id() != node_id);
                 for child in children {
+                    let child = self.get_node(&child).unwrap();
                     node.remove_child(child.clone());
-                    self.remove_node(&child.get_node_id(), strategy.clone());
+                    self.remove_node(&child.get_node_id(), strategy.clone())?;
                 }
+                Ok(())
             }
         }
     }
@@ -291,7 +299,7 @@ where
                     for child in children.clone() {
                         subsection.append(
                             &mut self
-                                .get_subtree(&child.get_node_id(), Some(current_generation))
+                                .get_subtree(&child, Some(current_generation))
                                 .get_nodes(),
                         );
                     }
@@ -299,7 +307,7 @@ where
             } else {
                 let children = node.get_children();
                 for child in children {
-                    subsection.append(&mut self.get_subtree(&child.get_node_id(), None).get_nodes());
+                    subsection.append(&mut self.get_subtree(&child, None).get_nodes());
                 }
             }
         }
@@ -344,6 +352,7 @@ where
     ///
     /// This method prints the tree to the standard output.
     fn print_tree(
+        tree: &Tree<Q, T>,
         f: &mut std::fmt::Formatter<'_>,
         node: &Node<Q, T>,
         level: usize,
@@ -373,10 +382,12 @@ where
         let children = node.get_children();
         let children_count = children.len();
         for (index, child) in children.iter().enumerate() {
+            let child = tree.get_node(child).unwrap();
             let last_item = index == children_count - 1;
             // Check if parent was last child
             let is_parent_last_item = if let Some(parent) = node.get_parent() {
-                parent.get_children().last().unwrap().get_node_id() == node.get_node_id()
+                let parent = tree.get_node(&parent).unwrap();
+                parent.get_children().last().unwrap() == &node.get_node_id()
             } else {
                 true
             };
@@ -384,9 +395,9 @@ where
                 is_within.0 = !is_parent_last_item;
                 is_within.1 = level;
             } else {
-                is_within.1 = if level > 0 { level - 1 } else { level };
+                is_within.1 = if level > 1 && level <= 3 { level - 1 } else if level > 3 { level - 2 } else { level };
             }
-            Tree::print_tree(f, child, level + 1, (is_within.0, is_within.1), last_item)?;
+            Tree::print_tree(tree, f, &child, level + 1, (is_within.0, is_within.1), last_item)?;
         }
         Ok(())
     }
@@ -409,10 +420,10 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(node) = self.get_root_node() {
-            Tree::print_tree(f, &node, 0, (false, 0), true)?;
+            Tree::print_tree(self, f, &node, 0, (false, 0), true)?;
         } else {
             let root = self.nodes.first().unwrap();
-            Tree::print_tree(f, root, 0, (false, 0), true)?;
+            Tree::print_tree(self, f, root, 0, (false, 0), true)?;
         }
         Ok(())
     }
@@ -490,7 +501,7 @@ mod tests {
         assert_eq!(tree.nodes.len(), 2);
         assert_eq!(node_id_2, 2);
         let node_2 = tree.get_node(&2).unwrap();
-        assert_eq!(node_2.get_parent().unwrap().get_node_id(), 1);
+        assert_eq!(node_2.get_parent().unwrap(), 1);
     }
 
     #[test]
@@ -511,22 +522,23 @@ mod tests {
     }
 
     #[test]
-    fn test_tree_remove_node() {
+    fn test_tree_remove_node() -> crate::prelude::Result<()> {
         let mut tree = Tree::new();
         let node = Node::new(1, Some(2));
-        tree.add_node(node.clone(), None).unwrap();
+        tree.add_node(node.clone(), None)?;
         let node_2 = Node::new(2, Some(3));
-        tree.add_node(node_2.clone(), Some(&1)).unwrap();
+        tree.add_node(node_2.clone(), Some(&1))?;
         let node_3 = Node::new(3, Some(6));
-        tree.add_node(node_3.clone(), Some(&2)).unwrap();
-        tree.remove_node(&2, NodeRemovalStrategy::RetainChildren);
+        tree.add_node(node_3.clone(), Some(&2))?;
+        tree.remove_node(&2, NodeRemovalStrategy::RetainChildren)?;
         assert_eq!(tree.get_nodes().len(), 2);
         let node_4 = Node::new(4, Some(5));
         let node_5 = Node::new(5, Some(12));
-        tree.add_node(node_4.clone(), Some(&3)).unwrap();
-        tree.add_node(node_5.clone(), Some(&3)).unwrap();
-        tree.remove_node(&3, NodeRemovalStrategy::RemoveNodeAndChildren);
+        tree.add_node(node_4.clone(), Some(&3))?;
+        tree.add_node(node_5.clone(), Some(&3))?;
+        tree.remove_node(&3, NodeRemovalStrategy::RemoveNodeAndChildren)?;
         assert_eq!(tree.get_nodes().len(), 1);
+        Ok(())
     }
 
     #[test]
@@ -592,8 +604,7 @@ mod tests {
 
     #[cfg(feature = "serde")]
     #[test]
-    #[ignore]
-    fn test_tree_serialize() {
+    fn test_tree_serialize_and_deserialize() {
         let mut tree = Tree::new();
         let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
         let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -602,17 +613,8 @@ mod tests {
         tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
         let serialized = serde_json::to_string(&tree).unwrap();
         let expected = r#"{"nodes":[{"node_id":1,"value":2,"parent":null,"children":[2]},{"node_id":2,"value":3,"parent":1,"children":[3,4]},{"node_id":3,"value":6,"parent":2,"children":[5]},{"node_id":4,"value":5,"parent":2,"children":[]},{"node_id":5,"value":6,"parent":3,"children":[]}]}"#;
-        assert_eq!(serialized, expected);
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    #[ignore]
-    fn test_tree_deserialize() {
-        println!("Testing tree deserialization");
-        let serialized = r#"{"nodes":[{"node_id":1,"value":2,"parent":null,"children":[2]},{"node_id":2,"value":3,"parent":1,"children":[3,4]},{"node_id":3,"value":6,"parent":2,"children":[5]},{"node_id":4,"value":5,"parent":2,"children":[]},{"node_id":5,"value":6,"parent":3,"children":[]}], "root": 1}"#;
-        let tree: Tree<u32, u32> = serde_json::from_str(serialized).unwrap();
-        println!("{}", tree);
-        assert_eq!(tree.nodes.len(), 5);
+        let deserialized: Tree<u32, u32> = serde_json::from_str(&serialized).unwrap();
+        let expected_tree: Tree<u32, u32> = serde_json::from_str(expected).unwrap();
+        assert_eq!(deserialized, expected_tree);
     }
 }

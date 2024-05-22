@@ -1,7 +1,0 @@
-[package]
-name = "basic_tree"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-tree-ds = { path = "../../../tree-ds" }
