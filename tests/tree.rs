@@ -1,5 +1,6 @@
 use tree_ds::prelude::*;
 
+#[cfg(feature = "serde")]
 #[test]
 fn test_tree() -> Result<()>{
     // Regression tests for the tree data structure.
