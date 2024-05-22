@@ -424,9 +424,9 @@ where
     /// The value of the node.
     value: Option<T>,
     /// The children of the node.
-    children: Vec<Node<Q, T>>,
+    children: Vec<Q>,
     /// The parent of the node.
-    parent: Option<Node<Q, T>>,
+    parent: Option<Q>,
 }
 
 #[cfg(test)]
