@@ -33,7 +33,7 @@ efficient, making it suitable for use in performance-critical applications.
 
 Add the following to your `Cargo.toml` file:
 
-```toml
+```toml copy
 [dependencies]
 tree-ds = "0.1"
 ```
