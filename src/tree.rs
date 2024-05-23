@@ -172,6 +172,144 @@ where
             .find(|n| n.get_parent().is_none())
             .cloned()
     }
+    
+    /// Get the height of the tree.
+    /// 
+    /// This method gets the height of the tree. The height of the tree is the length of the longest path
+    /// from the root node to a leaf node. The height of the tree is the number of edges on the longest
+    /// path from the root node to a leaf node.
+    /// 
+    /// # Returns
+    /// 
+    /// The height of the tree.
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// # use tree_ds::prelude::{Node, Tree};
+    /// 
+    /// let mut tree: Tree<i32, i32> = Tree::new();
+    /// 
+    /// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+    /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+    /// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+    /// 
+    /// assert_eq!(tree.get_node_height(&node_1), 2);
+    /// ```
+    pub fn get_node_height(&self, node_id: &Q) -> i32 {
+        let node = self.get_node(node_id).unwrap();
+        let children = node.get_children();
+        if children.is_empty() {
+            return 0;
+        }
+        let mut height = 0;
+        for child in children {
+            let child_height = self.get_node_height(&child);
+            if child_height > height {
+                height = child_height;
+            }
+        }
+        height + 1
+    }
+    
+    /// Get the depth of a node in the tree.
+    /// 
+    /// This method gets the depth of a node in the tree. The depth of a node is the length of the path
+    /// from the root node to the node. The depth of the node is the number of edges on the path from the
+    /// root node to the node.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `node_id` - The id of the node.
+    /// 
+    /// # Returns
+    /// 
+    /// The depth of the node in the tree.
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// # use tree_ds::prelude::{Node, Tree};
+    /// 
+    /// let mut tree: Tree<i32, i32> = Tree::new();
+    /// 
+    /// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+    /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+    /// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+    /// 
+    /// assert_eq!(tree.get_node_depth(&node_3), 2);
+    /// ```
+    pub fn get_node_depth(&self, node_id: &Q) -> i32 {
+        let node = self.get_node(node_id).unwrap();
+        let mut depth = 0;
+        let mut parent = node.get_parent();
+        while parent.is_some() {
+            depth += 1;
+            parent = self.get_node(&parent.unwrap()).unwrap().get_parent();
+        }
+        depth
+    }
+    
+    /// Get the height of the tree.
+    /// 
+    /// This method gets the height of the tree. The height of the tree is the length of the longest path
+    /// from the root node to a leaf node. The height of the tree is the number of edges on the longest
+    /// path from the root node to a leaf node.
+    /// 
+    /// # Returns
+    /// 
+    /// The height of the tree.
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// # use tree_ds::prelude::{Node, Tree};
+    /// 
+    /// let mut tree: Tree<i32, i32> = Tree::new();
+    /// 
+    /// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+    /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+    /// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+    /// 
+    /// assert_eq!(tree.get_height(), 2);
+    /// ```
+    pub fn get_height(&self) -> i32 {
+        let root = self.get_root_node().unwrap();
+        self.get_node_height(&root.get_node_id())
+    }
+    
+    /// Get the degree of a node in the tree.
+    /// 
+    /// This method gets the degree of a node in the tree. The degree of a node is the number of children
+    /// that the node has.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `node_id` - The id of the node.
+    /// 
+    /// # Returns
+    /// 
+    /// The degree of the node in the tree.
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// # use tree_ds::prelude::{Node, Tree};
+    /// 
+    /// let mut tree: Tree<i32, i32> = Tree::new();
+    /// 
+    /// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+    /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+    /// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
+    /// 
+    /// assert_eq!(tree.get_node_degree(&node_1), 2);
+    /// assert_eq!(tree.get_node_degree(&node_2), 0);
+    /// assert_eq!(tree.get_node_degree(&node_3), 0);
+    /// ```
+    pub fn get_node_degree(&self, node_id: &Q) -> i32 {
+        let node = self.get_node(node_id).unwrap();
+        node.get_children().len() as i32
+    }
 
     /// Get the nodes in the tree.
     ///
@@ -193,8 +331,8 @@ where
     ///
     /// assert_eq!(tree.get_nodes().len(), 1);
     /// ```
-    pub fn get_nodes(&self) -> Vec<Node<Q, T>> {
-        self.nodes.clone()
+    pub fn get_nodes(&self) -> &Vec<Node<Q, T>> {
+        self.nodes.as_ref()
     }
 
     /// Remove a node from the tree.
@@ -300,14 +438,14 @@ where
                         subsection.append(
                             &mut self
                                 .get_subtree(&child, Some(current_generation))
-                                .get_nodes(),
+                                .get_nodes().clone(),
                         );
                     }
                 }
             } else {
                 let children = node.get_children();
                 for child in children {
-                    subsection.append(&mut self.get_subtree(&child, None).get_nodes());
+                    subsection.append(&mut self.get_subtree(&child, None).get_nodes().clone());
                 }
             }
         }
@@ -519,6 +657,56 @@ mod tests {
         let node = Node::new(1, Some(2));
         tree.add_node(node.clone(), None).unwrap();
         assert_eq!(tree.get_nodes().len(), 1);
+    }
+    
+    #[test]
+    fn test_tree_get_root_node() {
+        let mut tree = Tree::new();
+        let node = Node::new(1, Some(2));
+        tree.add_node(node.clone(), None).unwrap();
+        assert_eq!(tree.get_root_node(), Some(node));
+    }
+    
+    #[test]
+    fn test_tree_get_node_height() {
+        let mut tree = Tree::new();
+        let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+        let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+        assert_eq!(tree.get_node_height(&node_1), 2);
+        assert_eq!(tree.get_node_height(&node_2), 1);
+        assert_eq!(tree.get_node_height(&node_3), 0);
+    }
+    
+    #[test]
+    fn test_tree_get_node_depth() {
+        let mut tree = Tree::new();
+        let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+        let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+        assert_eq!(tree.get_node_depth(&node_3), 2);
+        assert_eq!(tree.get_node_depth(&node_2), 1);
+        assert_eq!(tree.get_node_depth(&node_1), 0);
+    }
+    
+    #[test]
+    fn test_tree_get_height() {
+        let mut tree = Tree::new();
+        let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+        tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+        assert_eq!(tree.get_height(), 2);
+    }
+    
+    #[test]
+    fn test_tree_get_node_degree() {
+        let mut tree = Tree::new();
+        let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+        let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
+        assert_eq!(tree.get_node_degree(&node_1), 2);
+        assert_eq!(tree.get_node_degree(&node_2), 0);
+        assert_eq!(tree.get_node_degree(&node_3), 0);
     }
 
     #[test]

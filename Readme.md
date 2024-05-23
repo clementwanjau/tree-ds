@@ -114,8 +114,15 @@ Equity: 3000
 ## Roadmap
 
 - Add support for more tree operations.
+  - Add support for tree traversal.
+  - Add support for hashing trees.
+  - Perform actions on a node while traversing the tree.
+  - Add node rotation.
 - Add a macro to create trees from a DSL.
 - Add support for weighted nodes.
+- Add Binary Tree and Binary Search Tree implementations.
+- Add B-Tree and AVL Tree implementations.
+- Add B+ Tree and Red-Black Tree implementations.
 
 ## License
 
