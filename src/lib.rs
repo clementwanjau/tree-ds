@@ -30,7 +30,7 @@ pub mod prelude {
 
     pub use crate::{
         node::Node,
-        tree::{NodeRemovalStrategy, SubTree, Tree},
+        tree::{NodeRemovalStrategy, SubTree, Tree, TraversalStrategy},
     };
 
     pub type Result<T> = std::result::Result<T, crate::error::Error>;
