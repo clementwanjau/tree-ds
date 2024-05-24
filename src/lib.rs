@@ -45,7 +45,7 @@
 //! let child_1 = tree.add_node(Node::new("Node 2", Some(3)), Some(&root)).unwrap();
 //! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1)).unwrap();
 //! let child_3 = tree.add_node(Node::new("Node 4", Some(5)), Some(&child_2)).unwrap();
-//!;
+//!
 //! tree.traverse(TraversalStrategy::PreOrder, &root)
 //!   .iter()
 //!   .for_each(|node_id| {
@@ -53,7 +53,7 @@
 //!     let cur_value = node.get_value().unwrap();
 //!     node.set_value(Some(cur_value + 1));
 //! });
-//! 
+//!
 //! # assert_eq!("Node 1: 3\n└── Node 2: 4\n    └── Node 3: 5\n        └── Node 4: 6\n", tree.to_string());
 //! # assert_eq!(tree.get_node(&root).unwrap().get_value().unwrap(), 3);
 //! ```
