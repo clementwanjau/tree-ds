@@ -1,14 +1,15 @@
 use std::cell::RefCell;
-use std::fmt::{Display};
+use std::fmt::Display;
+use std::hash::Hash;
 #[cfg(not(feature = "async"))]
 use std::rc::Rc;
 #[cfg(feature = "async")]
 use std::sync::Arc;
 
 #[cfg(feature = "serde")]
-use serde::ser::SerializeStruct;
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde")]
+use serde::ser::SerializeStruct;
 
 /// A node in a tree.
 ///
@@ -39,9 +40,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(not(feature = "async"))]
 #[derive(Clone, Debug, Eq)]
 pub struct Node<Q, T>(Rc<RefCell<_Node<Q, T>>>)
-where
-    Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone;
+	where
+		Q: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone;
 
 /// A node in a tree.
 ///
@@ -72,451 +73,464 @@ where
 #[cfg(feature = "async")]
 #[derive(Clone, Debug, Eq)]
 pub struct Node<Q, T>(Arc<RefCell<_Node<Q, T>>>)
-where
-    Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone;
+	where
+		Q: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone;
 
 impl<Q, T> Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone,
+	where
+		Q: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone,
 {
-    /// Create a new node.
-    ///
-    /// This method creates a new node with the given node id and value. The node id is used to identify the node
-    /// and the value is the value of the node. The value can be used to store any data that you want to associate
-    /// with the node.
-    ///
-    /// # Arguments
-    ///
-    /// * `node_id` - The id of the node.
-    /// * `value` - The value of the node.
-    ///
-    /// # Returns
-    ///
-    /// A new node with the given node id and value.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let node = Node::new(1, Some(2));
-    /// ```
-    #[cfg(not(feature = "async"))]
-    pub fn new(node_id: Q, value: Option<T>) -> Self {
-        Node(Rc::new(RefCell::new(_Node {
-            node_id,
-            value,
-            children: vec![],
-            parent: None,
-        })))
-    }
+	/// Create a new node.
+	///
+	/// This method creates a new node with the given node id and value. The node id is used to identify the node
+	/// and the value is the value of the node. The value can be used to store any data that you want to associate
+	/// with the node.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The id of the node.
+	/// * `value` - The value of the node.
+	///
+	/// # Returns
+	///
+	/// A new node with the given node id and value.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let node = Node::new(1, Some(2));
+	/// ```
+	#[cfg(not(feature = "async"))]
+	pub fn new(node_id: Q, value: Option<T>) -> Self {
+		Node(Rc::new(RefCell::new(_Node {
+			node_id,
+			value,
+			children: vec![],
+			parent: None,
+		})))
+	}
 
-    /// Create a new node.
-    ///
-    /// This method creates a new node with the given node id and value. The node id is used to identify the node
-    /// and the value is the value of the node. The value can be used to store any data that you want to associate
-    /// with the node.
-    ///
-    /// # Arguments
-    ///
-    /// * `node_id` - The id of the node.
-    /// * `value` - The value of the node.
-    ///
-    /// # Returns
-    ///
-    /// A new node with the given node id and value.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let node = Node::new(1, Some(2));
-    /// ```
-    #[cfg(feature = "async")]
-    pub fn new(node_id: Q, value: Option<T>) -> Self {
-        Node(Arc::new(RefCell::new(_Node {
-            node_id,
-            value,
-            children: vec![],
-            parent: None,
-        })))
-    }
+	/// Create a new node.
+	///
+	/// This method creates a new node with the given node id and value. The node id is used to identify the node
+	/// and the value is the value of the node. The value can be used to store any data that you want to associate
+	/// with the node.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The id of the node.
+	/// * `value` - The value of the node.
+	///
+	/// # Returns
+	///
+	/// A new node with the given node id and value.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let node = Node::new(1, Some(2));
+	/// ```
+	#[cfg(feature = "async")]
+	pub fn new(node_id: Q, value: Option<T>) -> Self {
+		Node(Arc::new(RefCell::new(_Node {
+			node_id,
+			value,
+			children: vec![],
+			parent: None,
+		})))
+	}
 
-    /// Add a child to the node.
-    ///
-    /// This method adds a child to the node. The child is added to the children of the node and the parent
-    /// of the child is set to the node.
-    ///
-    /// # Arguments
-    ///
-    /// * `child` - The child to add to the node.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let parent_node = Node::new(1, Some(2));
-    /// parent_node.add_child(Node::new(2, Some(3)));
-    /// ```
-    pub fn add_child(&self, child: Node<Q, T>) {
-        {
-            // This block is to ensure that the borrow_mut() is dropped before the next borrow_mut() call.
-            let mut node = self.0.borrow_mut();
-            node.children.push(child.get_node_id());
-        }
-        let mut child = child.0.borrow_mut();
-        child.parent = Some(self.get_node_id());
-    }
+	/// Add a child to the node.
+	///
+	/// This method adds a child to the node. The child is added to the children of the node and the parent
+	/// of the child is set to the node.
+	///
+	/// # Arguments
+	///
+	/// * `child` - The child to add to the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let parent_node = Node::new(1, Some(2));
+	/// parent_node.add_child(Node::new(2, Some(3)));
+	/// ```
+	pub fn add_child(&self, child: Node<Q, T>) {
+		{
+			// This block is to ensure that the borrow_mut() is dropped before the next borrow_mut() call.
+			let mut node = self.0.borrow_mut();
+			node.children.push(child.get_node_id());
+		}
+		let mut child = child.0.borrow_mut();
+		child.parent = Some(self.get_node_id());
+	}
 
-    /// Remove a child from the node.
-    ///
-    /// This method removes a child from the node. The child is removed from the children of the node and the parent
-    /// of the child is set to `None`.
-    ///
-    /// # Arguments
-    ///
-    /// * `child` - The child to remove from the node.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let parent_node = Node::new(1, Some(2));
-    /// let child_node = Node::new(2, Some(3));
-    /// parent_node.add_child(child_node.clone());
-    /// parent_node.remove_child(child_node);
-    /// ```
-    pub fn remove_child(&self, child: Node<Q, T>) {
-        let mut node = self.0.borrow_mut();
-        node.children.retain(|x| x != &child.get_node_id());
-        let mut child = child.0.borrow_mut();
-        child.parent = None;
-    }
+	/// Remove a child from the node.
+	///
+	/// This method removes a child from the node. The child is removed from the children of the node and the parent
+	/// of the child is set to `None`.
+	///
+	/// # Arguments
+	///
+	/// * `child` - The child to remove from the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let parent_node = Node::new(1, Some(2));
+	/// let child_node = Node::new(2, Some(3));
+	/// parent_node.add_child(child_node.clone());
+	/// parent_node.remove_child(child_node);
+	/// ```
+	pub fn remove_child(&self, child: Node<Q, T>) {
+		let mut node = self.0.borrow_mut();
+		node.children.retain(|x| x != &child.get_node_id());
+		let mut child = child.0.borrow_mut();
+		child.parent = None;
+	}
 
-    /// Get the unique Id of the node.
-    ///
-    /// This method returns the unique Id of the node. The unique Id is used to identify the node.
-    ///
-    /// # Returns
-    ///
-    /// The unique Id of the node.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let node = Node::new(1, Some(2));
-    /// assert_eq!(node.get_node_id(), 1);
-    /// ```
-    pub fn get_node_id(&self) -> Q {
-        self.0.borrow().node_id.clone()
-    }
+	/// Get the unique Id of the node.
+	///
+	/// This method returns the unique Id of the node. The unique Id is used to identify the node.
+	///
+	/// # Returns
+	///
+	/// The unique Id of the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let node = Node::new(1, Some(2));
+	/// assert_eq!(node.get_node_id(), 1);
+	/// ```
+	pub fn get_node_id(&self) -> Q {
+		self.0.borrow().node_id.clone()
+	}
 
-    /// Get the children of the node.
-    ///
-    /// This method returns the children of the node.
-    ///
-    /// # Returns
-    ///
-    /// The children of the node.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let node = Node::new(1, Some(2));
-    /// let child = Node::new(2, Some(3));
-    /// node.add_child(child);
-    /// assert_eq!(node.get_children().len(), 1);
-    /// ```
-    pub fn get_children(&self) -> Vec<Q> {
-        self.0.borrow().children.clone()
-    }
+	/// Get the children of the node.
+	///
+	/// This method returns the children of the node.
+	///
+	/// # Returns
+	///
+	/// The children of the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let node = Node::new(1, Some(2));
+	/// let child = Node::new(2, Some(3));
+	/// node.add_child(child);
+	/// assert_eq!(node.get_children().len(), 1);
+	/// ```
+	pub fn get_children(&self) -> Vec<Q> {
+		self.0.borrow().children.clone()
+	}
 
-    /// Get the node id of the parent of the node.
-    ///
-    /// This method returns the node_id of the parent of the node. In the case where the node is a root node in a tree,
-    /// the parent of the node will be `None`.
-    ///
-    /// # Returns
-    ///
-    /// The optional node_id of the parent of the node.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let parent_node = Node::new(1, Some(2));
-    /// let child_node = Node::new(2, Some(3));
-    /// parent_node.add_child(child_node.clone());
-    /// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
-    /// assert!(parent_node.get_parent().is_none());
-    /// ```
-    pub fn get_parent(&self) -> Option<Q> {
-        self.0.borrow().parent.clone()
-    }
+	/// Get the node id of the parent of the node.
+	///
+	/// This method returns the node_id of the parent of the node. In the case where the node is a root node in a tree,
+	/// the parent of the node will be `None`.
+	///
+	/// # Returns
+	///
+	/// The optional node_id of the parent of the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let parent_node = Node::new(1, Some(2));
+	/// let child_node = Node::new(2, Some(3));
+	/// parent_node.add_child(child_node.clone());
+	/// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
+	/// assert!(parent_node.get_parent().is_none());
+	/// ```
+	pub fn get_parent(&self) -> Option<Q> {
+		self.0.borrow().parent.clone()
+	}
 
-    /// Get the value of the node.
-    ///
-    /// This method returns the value of the node. If the node has no value, `None` is returned.
-    ///
-    /// # Returns
-    ///
-    /// The value of the node.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let node = Node::new(1, Some(2));
-    /// assert_eq!(node.get_value(), Some(2));
-    /// ```
-    pub fn get_value(&self) -> Option<T> {
-        self.0.borrow().value.clone()
-    }
+	/// Get the value of the node.
+	///
+	/// This method returns the value of the node. If the node has no value, `None` is returned.
+	///
+	/// # Returns
+	///
+	/// The value of the node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let node = Node::new(1, Some(2));
+	/// assert_eq!(node.get_value(), Some(2));
+	/// ```
+	pub fn get_value(&self) -> Option<T> {
+		self.0.borrow().value.clone()
+	}
 
-    /// Set the value of the node.
-    ///
-    /// This method sets the value of the node.
-    ///
-    /// # Arguments
-    ///
-    /// * `value` - The value to set.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let node = Node::new(1, Some(2));
-    /// assert_eq!(node.get_value(), Some(2));
-    /// node.set_value(Some(3));
-    /// assert_eq!(node.get_value(), Some(3));
-    /// ```
-    pub fn set_value(&self, value: Option<T>) {
-        self.0.borrow_mut().value = value;
-    }
+	/// Set the value of the node.
+	///
+	/// This method sets the value of the node.
+	///
+	/// # Arguments
+	///
+	/// * `value` - The value to set.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let node = Node::new(1, Some(2));
+	/// assert_eq!(node.get_value(), Some(2));
+	/// node.set_value(Some(3));
+	/// assert_eq!(node.get_value(), Some(3));
+	/// ```
+	pub fn set_value(&self, value: Option<T>) {
+		self.0.borrow_mut().value = value;
+	}
 
-    /// Set the parent of the node.
-    ///
-    /// This method sets the parent of the node.
-    ///
-    /// # Arguments
-    ///
-    /// * `parent` - The parent to set.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use tree_ds::prelude::Node;
-    ///
-    /// let parent_node = Node::new(1, Some(2));
-    /// let child_node = Node::new(2, Some(3));
-    /// child_node.set_parent(Some(parent_node.clone()));
-    /// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
-    /// ```
-    pub fn set_parent(&self, parent: Option<Node<Q, T>>) {
-        if let Some(parent) = parent.as_ref() {
-            parent.add_child(self.clone());
-        }
-        self.0.borrow_mut().parent = parent.map(|x| x.get_node_id());
-    }
+	/// Set the parent of the node.
+	///
+	/// This method sets the parent of the node.
+	///
+	/// # Arguments
+	///
+	/// * `parent` - The parent to set.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Node;
+	///
+	/// let parent_node = Node::new(1, Some(2));
+	/// let child_node = Node::new(2, Some(3));
+	/// child_node.set_parent(Some(parent_node.clone()));
+	/// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
+	/// ```
+	pub fn set_parent(&self, parent: Option<Node<Q, T>>) {
+		if let Some(parent) = parent.as_ref() {
+			parent.add_child(self.clone());
+		}
+		self.0.borrow_mut().parent = parent.map(|x| x.get_node_id());
+	}
 }
 
 impl<Q, T> PartialEq for Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone,
+	where
+		Q: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone,
 {
-    fn eq(&self, other: &Self) -> bool {
-        self.get_node_id() == other.get_node_id() && self.get_value() == other.get_value()
-    }
+	fn eq(&self, other: &Self) -> bool {
+		self.get_node_id() == other.get_node_id() && self.get_value() == other.get_value()
+	}
 }
 
 impl<Q, T> Display for Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone + Display,
-    T: PartialEq + Eq + Clone + Display + Default,
+	where
+		Q: PartialEq + Eq + Clone + Display,
+		T: PartialEq + Eq + Clone + Display + Default,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}: {}",
-            self.get_node_id(),
-            self.get_value().as_ref().cloned().unwrap_or_default()
-        )
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(
+			f,
+			"{}: {}",
+			self.get_node_id(),
+			self.get_value().as_ref().cloned().unwrap_or_default()
+		)
+	}
+}
+
+impl<Q, T> Hash for Node<Q, T>
+	where
+		Q: PartialEq + Eq + Clone + Hash,
+		T: PartialEq + Eq + Clone + Hash,
+{
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.get_node_id().hash(state);
+		self.get_value().hash(state);
+		self.get_children().hash(state);
+		self.get_parent().hash(state);
+	}
 }
 
 #[cfg(feature = "serde")]
 impl<Q, T> Serialize for Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone + Serialize,
-    T: PartialEq + Eq + Clone + Serialize,
+	where
+		Q: PartialEq + Eq + Clone + Serialize,
+		T: PartialEq + Eq + Clone + Serialize,
 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("Node", 4)?;
-        state.serialize_field("node_id", &self.get_node_id())?;
-        state.serialize_field("value", &self.get_value())?;
-        state.serialize_field("children", &self.get_children())?;
-        state.serialize_field("parent", &self.get_parent())?;
-        state.end()
-    }
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+		where
+			S: serde::Serializer,
+	{
+		let mut state = serializer.serialize_struct("Node", 4)?;
+		state.serialize_field("node_id", &self.get_node_id())?;
+		state.serialize_field("value", &self.get_value())?;
+		state.serialize_field("children", &self.get_children())?;
+		state.serialize_field("parent", &self.get_parent())?;
+		state.end()
+	}
 }
 
 #[cfg(feature = "serde")]
 impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone + Deserialize<'de>,
-    T: PartialEq + Eq + Clone + Deserialize<'de>,
+	where
+		Q: PartialEq + Eq + Clone + Deserialize<'de>,
+		T: PartialEq + Eq + Clone + Deserialize<'de>,
 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+		where
+			D: serde::Deserializer<'de>,
+	{
+		let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
 
-        #[cfg(not(feature = "async"))]
-        return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
-        #[cfg(feature = "async")]
-        return Ok(Node(Arc::new(RefCell::new(node))));
-    }
+		#[cfg(not(feature = "async"))]
+		return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
+		#[cfg(feature = "async")]
+		return Ok(Node(Arc::new(RefCell::new(node))));
+	}
 }
 
 #[cfg(feature = "serde")]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct _Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone,
+	where
+		Q: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone,
 {
-    /// The user supplied id of the node.
-    node_id: Q,
-    /// The value of the node.
-    value: Option<T>,
-    /// The children of the node.
-    children: Vec<Q>,
-    /// The parent of the node.
-    parent: Option<Q>,
+	/// The user supplied id of the node.
+	node_id: Q,
+	/// The value of the node.
+	value: Option<T>,
+	/// The children of the node.
+	children: Vec<Q>,
+	/// The parent of the node.
+	parent: Option<Q>,
 }
 
 #[cfg(not(feature = "serde"))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone,
+	where
+		Q: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone,
 {
-    /// The user supplied id of the node.
-    node_id: Q,
-    /// The value of the node.
-    value: Option<T>,
-    /// The children of the node.
-    children: Vec<Q>,
-    /// The parent of the node.
-    parent: Option<Q>,
+	/// The user supplied id of the node.
+	node_id: Q,
+	/// The value of the node.
+	value: Option<T>,
+	/// The children of the node.
+	children: Vec<Q>,
+	/// The parent of the node.
+	parent: Option<Q>,
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+	use super::*;
 
-    #[test]
-    fn test_node() {
-        let node = Node::new(1, Some(2));
-        let child = Node::new(2, Some(3));
-        node.add_child(child);
-        assert_eq!(node.get_children().len(), 1);
-    }
+	#[test]
+	fn test_node() {
+		let node = Node::new(1, Some(2));
+		let child = Node::new(2, Some(3));
+		node.add_child(child);
+		assert_eq!(node.get_children().len(), 1);
+	}
 
-    #[test]
-    fn test_node_get_node_id() {
-        let node = Node::new(1, Some(2));
-        assert_eq!(node.get_node_id(), 1);
-    }
+	#[test]
+	fn test_node_get_node_id() {
+		let node = Node::new(1, Some(2));
+		assert_eq!(node.get_node_id(), 1);
+	}
 
-    #[test]
-    fn test_node_get_parent() {
-        let parent_node = Node::new(1, Some(2));
-        let child_node = Node::new(2, Some(3));
-        parent_node.add_child(child_node.clone());
-        assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
-        assert!(parent_node.get_parent().is_none());
-    }
+	#[test]
+	fn test_node_get_parent() {
+		let parent_node = Node::new(1, Some(2));
+		let child_node = Node::new(2, Some(3));
+		parent_node.add_child(child_node.clone());
+		assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
+		assert!(parent_node.get_parent().is_none());
+	}
 
-    #[test]
-    fn test_node_get_value() {
-        let node = Node::new(1, Some(2));
-        assert_eq!(node.get_value(), Some(2));
-    }
+	#[test]
+	fn test_node_get_value() {
+		let node = Node::new(1, Some(2));
+		assert_eq!(node.get_value(), Some(2));
+	}
 
-    #[test]
-    fn test_node_set_value() {
-        let node = Node::new(1, Some(2));
-        assert_eq!(node.get_value(), Some(2));
-        node.set_value(Some(3));
-        assert_eq!(node.get_value(), Some(3));
-    }
+	#[test]
+	fn test_node_set_value() {
+		let node = Node::new(1, Some(2));
+		assert_eq!(node.get_value(), Some(2));
+		node.set_value(Some(3));
+		assert_eq!(node.get_value(), Some(3));
+	}
 
-    #[test]
-    fn test_node_set_parent() {
-        let parent_node = Node::new(1, Some(2));
-        let child_node = Node::new(2, Some(3));
-        child_node.set_parent(Some(parent_node.clone()));
-        assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
-    }
+	#[test]
+	fn test_node_set_parent() {
+		let parent_node = Node::new(1, Some(2));
+		let child_node = Node::new(2, Some(3));
+		child_node.set_parent(Some(parent_node.clone()));
+		assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
+	}
 
-    #[test]
-    fn test_node_remove_child() {
-        let parent_node = Node::new(1, Some(2));
-        let child_node = Node::new(2, Some(3));
-        parent_node.add_child(child_node.clone());
-        parent_node.remove_child(child_node);
-        assert_eq!(parent_node.get_children().len(), 0);
-    }
+	#[test]
+	fn test_node_remove_child() {
+		let parent_node = Node::new(1, Some(2));
+		let child_node = Node::new(2, Some(3));
+		parent_node.add_child(child_node.clone());
+		parent_node.remove_child(child_node);
+		assert_eq!(parent_node.get_children().len(), 0);
+	}
 
-    #[test]
-    fn test_node_eq() {
-        let node1 = Node::new(1, Some(2));
-        let node2 = Node::new(1, Some(2));
-        assert_eq!(node1, node2);
-    }
+	#[test]
+	fn test_node_eq() {
+		let node1 = Node::new(1, Some(2));
+		let node2 = Node::new(1, Some(2));
+		assert_eq!(node1, node2);
+	}
 
-    #[test]
-    fn test_node_display() {
-        let node = Node::new(1, Some(2));
-        assert_eq!(format!("{}", node), "1: 2");
-    }
+	#[test]
+	fn test_node_display() {
+		let node = Node::new(1, Some(2));
+		assert_eq!(format!("{}", node), "1: 2");
+	}
 
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_node_serialize() {
-        let node = Node::new(1, Some(2));
-        let serialized = serde_json::to_string(&node).unwrap();
-        assert_eq!(
-            serialized,
-            r#"{"node_id":1,"value":2,"children":[],"parent":null}"#
-        );
-    }
+	#[cfg(feature = "serde")]
+	#[test]
+	fn test_node_serialize() {
+		let node = Node::new(1, Some(2));
+		let serialized = serde_json::to_string(&node).unwrap();
+		assert_eq!(
+			serialized,
+			r#"{"node_id":1,"value":2,"children":[],"parent":null}"#
+		);
+	}
 
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_node_deserialize() {
-        let node = Node::new(1, Some(2));
-        let serialized = serde_json::to_string(&node).unwrap();
-        let deserialized: Node<i32, i32> = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(node, deserialized);
-    }
+	#[cfg(feature = "serde")]
+	#[test]
+	fn test_node_deserialize() {
+		let node = Node::new(1, Some(2));
+		let serialized = serde_json::to_string(&node).unwrap();
+		let deserialized: Node<i32, i32> = serde_json::from_str(&serialized).unwrap();
+		assert_eq!(node, deserialized);
+	}
 }

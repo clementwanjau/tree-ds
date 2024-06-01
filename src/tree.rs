@@ -49,7 +49,7 @@ pub type SubTree<Q, T> = Tree<Q, T>;
 ///
 /// let tree: Tree<i32, i32> = Tree::new();
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Tree<Q, T>
 	where
 		Q: PartialEq + Eq + Clone,
@@ -652,6 +652,7 @@ impl<Q, T> Drop for Tree<Q, T>
 	}
 }
 
+
 #[cfg(feature = "serde")]
 impl<Q, T> Serialize for Tree<Q, T>
 	where
@@ -696,6 +697,8 @@ impl<'de, Q, T> Deserialize<'de> for Tree<Q, T>
 
 #[cfg(test)]
 mod tests {
+	use std::hash::{DefaultHasher, Hasher};
+
 	use super::*;
 
 	#[test]
@@ -901,5 +904,29 @@ mod tests {
 		let deserialized: Tree<u32, u32> = serde_json::from_str(&serialized).unwrap();
 		let expected_tree: Tree<u32, u32> = serde_json::from_str(expected).unwrap();
 		assert_eq!(deserialized, expected_tree);
+	}
+
+	#[test]
+	fn test_hashing() {
+		let mut tree = Tree::new();
+		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+		tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
+		tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
+		let mut tree_2 = Tree::new();
+		let node_1 = tree_2.add_node(Node::new(1, Some(2)), None).unwrap();
+		let node_2 = tree_2.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+		let node_3 = tree_2.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+		tree_2.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
+		tree_2.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
+		assert_eq!(tree, tree_2);
+		let mut hasher = DefaultHasher::new();
+		tree.hash(&mut hasher);
+		let tree_hash = hasher.finish();
+		let mut hasher = DefaultHasher::new();
+		tree_2.hash(&mut hasher);
+		let tree_2_hash = hasher.finish();
+		assert_eq!(tree_hash, tree_2_hash);
 	}
 }
