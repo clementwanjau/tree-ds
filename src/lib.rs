@@ -74,7 +74,7 @@ pub mod prelude {
 	//! A module to re-export the necessary types for the tree data structure.
 
     pub use crate::{
-        node::Node,
+        node::{Node, Nodes},
         tree::{NodeRemovalStrategy, SubTree, TraversalStrategy, Tree},
     };
 

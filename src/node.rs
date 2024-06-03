@@ -409,8 +409,8 @@ impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 	}
 }
 
-#[cfg(feature = "serde")]
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T>
 	where
 		Q: PartialEq + Eq + Clone,
@@ -426,21 +426,357 @@ pub(crate) struct _Node<Q, T>
 	parent: Option<Q>,
 }
 
-#[cfg(not(feature = "serde"))]
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct _Node<Q, T>
+
+/// An iterator over the nodes in a tree.
+///
+/// This struct represents an iterator over the nodes in a tree. The iterator is created by calling the `iter` method
+/// on the tree. The iterator yields the nodes in the tree in the order that they were added to the tree.
+///
+/// # Type Parameters
+///
+/// * `Q` - The type of the unique id of the node.
+/// * `T` - The type of the value of the node.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Nodes<Q, T>(Vec<Node<Q, T>>)
 	where
 		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone,
+		T: PartialEq + Eq + Clone;
+
+impl<Q, T> Nodes<Q, T> where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone {
+	/// Create a new iterator over the nodes in a tree.
+	///
+	/// This method creates a new iterator over the nodes in a tree.
+	///
+	/// # Arguments
+	///
+	/// * `nodes` - The nodes in the tree.
+	///
+	/// # Returns
+	///
+	/// A new iterator over the nodes in a tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// ```
+	pub fn new(nodes: Vec<Node<Q, T>>) -> Self {
+		Nodes(nodes)
+	}
+
+	/// Get an iterator over the nodes in the tree.
+	///
+	/// This method returns an iterator over the nodes in the tree.
+	///
+	/// # Returns
+	///
+	/// An iterator over the nodes in the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	///
+	/// for node in nodes.iter() {
+	///     // Do something with the node.
+	/// }
+	/// ```
+	pub fn iter(&self) -> std::slice::Iter<Node<Q, T>> {
+		self.0.iter()
+	}
+
+	/// Get the number of nodes in the tree.
+	///
+	/// This method returns the number of nodes in the tree.
+	///
+	/// # Returns
+	///
+	/// The number of nodes in the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// assert_eq!(nodes.len(), 1);
+	/// ```
+	pub fn len(&self) -> usize {
+		self.0.len()
+	}
+
+	/// Check if the tree is empty.
+	///
+	/// This method checks if the tree is empty.
+	///
+	/// # Returns
+	///
+	/// `true` if the tree is empty, `false` otherwise.
+	pub fn is_empty(&self) -> bool {
+		self.0.is_empty()
+	}
+
+	/// Get a node at the specified index.
+	///
+	/// This method returns a node at the specified index.
+	///
+	/// # Arguments
+	///
+	/// * `index` - The index of the node to get.
+	///
+	/// # Returns
+	///
+	/// The node at the specified index.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// assert_eq!(nodes.get(0).unwrap().get_node_id(), 1);
+	/// ```
+	pub fn get(&self, index: usize) -> Option<&Node<Q, T>> {
+		self.0.get(index)
+	}
+
+	/// Get a node by the node id.
+	///
+	/// This method returns a node by the node id.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The node id of the node to get.
+	///
+	/// # Returns
+	///
+	/// The node with the specified node id.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// assert_eq!(nodes.get_by_node_id(&1).unwrap().get_node_id(), 1);
+	/// ```
+	pub fn get_by_node_id(&self, node_id: &Q) -> Option<&Node<Q, T>> {
+		self.0.iter().find(|x| &x.get_node_id() == node_id)
+	}
+
+	/// Push a node to the nodes list.
+	///
+	/// This method pushes a node to the nodes list.
+	///
+	/// # Arguments
+	///
+	/// * `node` - The node to push.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// nodes.push(Node::new(2, Some(3)));
+	/// assert_eq!(nodes.len(), 2);
+	/// ```
+	pub fn push(&mut self, node: Node<Q, T>) {
+		self.0.push(node);
+	}
+
+	/// Remove a node at the specified index.
+	///
+	/// This method removes a node at the specified index.
+	///
+	/// # Arguments
+	///
+	/// * `index` - The index of the node to remove.
+	///
+	/// # Returns
+	///
+	/// The removed node.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// let removed_node = nodes.remove(0);
+	/// assert_eq!(removed_node.get_node_id(), 1);
+	/// assert_eq!(nodes.len(), 0);
+	/// ```
+	pub fn remove(&mut self, index: usize) -> Node<Q, T> {
+		self.0.remove(index)
+	}
+
+	/// Retain only the nodes that satisfy the predicate.
+	///
+	/// This method retains only the nodes that satisfy the predicate.
+	/// The predicate is a function that takes a node and returns a boolean value.
+	/// If the predicate returns `true`, the node is retained. If the predicate returns `false`, the node is removed.
+	/// The nodes are retained in the order that they were added to the tree.
+	///
+	/// # Arguments
+	///
+	/// * `f` - The predicate function.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let mut nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+	/// nodes.retain(|node| node.get_node_id() == 1);
+	/// assert_eq!(nodes.len(), 1);
+	/// ```
+	pub fn retain<F>(&mut self, f: F) where
+		F: FnMut(&Node<Q, T>) -> bool
+	{
+		self.0.retain(f);
+	}
+
+	/// Clear the nodes list.
+	///
+	/// This method clears the nodes list.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let mut nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+	/// nodes.clear();
+	/// assert_eq!(nodes.len(), 0);
+	/// ```
+	pub fn clear(&mut self) {
+		self.0.clear();
+	}
+
+	/// Append the nodes from another nodes list.
+	///
+	/// This method appends the nodes from another nodes list.
+	///
+	/// # Arguments
+	///
+	/// * `other` - The other nodes list.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// let mut other_nodes = Nodes::new(vec![Node::new(2, Some(3))]);
+	/// nodes.append(&mut other_nodes);
+	/// assert_eq!(nodes.len(), 2);
+	/// ```
+	pub fn append(&mut self, other: &mut Self) {
+		self.0.append(&mut other.0);
+	}
+
+	/// Append the nodes from another nodes list.
+	///
+	/// This method appends the nodes from another nodes list. This method is useful when you want
+	/// to append the nodes as a raw vector.
+	///
+	/// # Arguments
+	///
+	/// * `other` - The other nodes list.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+	/// let mut other_nodes = vec![Node::new(2, Some(3))];
+	/// nodes.append_raw(&mut other_nodes);
+	/// assert_eq!(nodes.len(), 2);
+	/// ```
+	pub fn append_raw(&mut self, other: &mut Vec<Node<Q, T>>) {
+		self.0.append(other);
+	}
+
+	/// Get the first node in the nodes list.
+	///
+	/// This method returns the first node in the nodes list.
+	///
+	/// # Returns
+	///
+	/// The first node in the nodes list.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Nodes};
+	///
+	/// let nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+	/// assert_eq!(nodes.first().unwrap().get_node_id(), 1);
+	/// ```
+	pub fn first(&self) -> Option<&Node<Q, T>> {
+		self.0.first()
+	}
+}
+
+impl<Q, T> AsRef<Nodes<Q, T>> for Nodes<Q, T> where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone
 {
-	/// The user supplied id of the node.
-	node_id: Q,
-	/// The value of the node.
-	value: Option<T>,
-	/// The children of the node.
-	children: Vec<Q>,
-	/// The parent of the node.
-	parent: Option<Q>,
+	fn as_ref(&self) -> &Nodes<Q, T> {
+		self
+	}
+}
+
+impl<Q, T> FromIterator<Node<Q, T>> for Nodes<Q, T> where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone
+{
+	fn from_iter<I: IntoIterator<Item=Node<Q, T>>>(iter: I) -> Self {
+		Nodes(iter.into_iter().collect())
+	}
+}
+
+impl<Q, T> Iterator for Nodes<Q, T> where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone
+{
+	type Item = Node<Q, T>;
+
+	#[allow(clippy::iter_next_slice)]
+	fn next(&mut self) -> Option<Self::Item> {
+		self.0.iter().next().cloned()
+	}
+
+	fn size_hint(&self) -> (usize, Option<usize>) {
+		self.0.iter().size_hint()
+	}
+}
+
+impl<Q, T> Default for Nodes<Q, T> where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone
+{
+	fn default() -> Self {
+		Nodes(vec![])
+	}
+}
+
+impl<Q, T> Display for Nodes<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		for node in self.iter() {
+			write!(f, "{}", node)?;
+		}
+		Ok(())
+	}
 }
 
 #[cfg(test)]
@@ -532,5 +868,153 @@ mod tests {
 		let serialized = serde_json::to_string(&node).unwrap();
 		let deserialized: Node<i32, i32> = serde_json::from_str(&serialized).unwrap();
 		assert_eq!(node, deserialized);
+	}
+
+	#[test]
+	fn test_nodes() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes.len(), 1);
+	}
+
+	#[test]
+	fn test_nodes_len() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes.len(), 1);
+	}
+
+	#[test]
+	fn test_nodes_is_empty() {
+		let nodes: Nodes<i32, String> = Nodes::default();
+		assert!(nodes.is_empty());
+	}
+
+	#[test]
+	fn test_nodes_get() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes.get(0).unwrap().get_node_id(), 1);
+	}
+
+	#[test]
+	fn test_nodes_get_by_node_id() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes.get_by_node_id(&1).unwrap().get_node_id(), 1);
+	}
+
+	#[test]
+	fn test_nodes_push() {
+		let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		nodes.push(Node::new(2, Some(3)));
+		assert_eq!(nodes.len(), 2);
+	}
+
+	#[test]
+	fn test_nodes_remove() {
+		let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		let removed_node = nodes.remove(0);
+		assert_eq!(removed_node.get_node_id(), 1);
+		assert_eq!(nodes.len(), 0);
+	}
+
+	#[test]
+	fn test_nodes_retain() {
+		let mut nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+		nodes.retain(|node| node.get_node_id() == 1);
+		assert_eq!(nodes.len(), 1);
+	}
+
+	#[test]
+	fn test_nodes_clear() {
+		let mut nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+		nodes.clear();
+		assert_eq!(nodes.len(), 0);
+	}
+
+	#[test]
+	fn test_nodes_append() {
+		let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		let mut other_nodes = Nodes::new(vec![Node::new(2, Some(3))]);
+		nodes.append(&mut other_nodes);
+		assert_eq!(nodes.len(), 2);
+	}
+
+	#[test]
+	fn test_nodes_append_raw() {
+		let mut nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		let mut other_nodes = vec![Node::new(2, Some(3))];
+		nodes.append_raw(&mut other_nodes);
+		assert_eq!(nodes.len(), 2);
+	}
+
+	#[test]
+	fn test_nodes_first() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+		assert_eq!(nodes.first().unwrap().get_node_id(), 1);
+	}
+
+	#[test]
+	fn test_nodes_default() {
+		let nodes: Nodes<i32, String> = Nodes::default();
+		assert!(nodes.is_empty());
+	}
+
+	#[test]
+	fn test_nodes_from_iter() {
+		let nodes = Nodes::from_iter(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes.len(), 1);
+	}
+
+	#[test]
+	fn test_nodes_iterator() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+		let mut iter = nodes.iter();
+		assert_eq!(iter.next().unwrap().get_node_id(), 1);
+		assert_eq!(iter.next().unwrap().get_node_id(), 2);
+	}
+
+	#[test]
+	fn test_nodes_size_hint() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		let (lower, upper) = nodes.size_hint();
+		assert_eq!(lower, 1);
+		assert_eq!(upper, Some(1));
+	}
+
+	#[test]
+	fn test_nodes_as_ref() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes.as_ref().len(), 1);
+	}
+
+	#[test]
+	fn test_nodes_eq() {
+		let nodes1 = Nodes::new(vec![Node::new(1, Some(2))]);
+		let nodes2 = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(nodes1, nodes2);
+	}
+
+	#[test]
+	fn test_nodes_display() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		assert_eq!(format!("{}", nodes), "1: 2");
+	}
+
+	#[cfg(feature = "serde")]
+	#[test]
+	fn test_nodes_serialize() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		let serialized = serde_json::to_string(&nodes).unwrap();
+		assert_eq!(
+			serialized,
+			r#"[{"node_id":1,"value":2,"children":[],"parent":null}]"#
+		);
+	}
+
+	#[cfg(feature = "serde")]
+	#[test]
+	fn test_nodes_deserialize() {
+		let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+		let serialized = serde_json::to_string(&nodes).unwrap();
+		let deserialized: Nodes<i32, i32> = serde_json::from_str(&serialized).unwrap();
+		assert_eq!(nodes, deserialized);
 	}
 }

@@ -6,6 +6,7 @@ use std::hash::Hash;
 use serde::{Deserialize, ser::SerializeStruct, Serialize, Serializer};
 
 use crate::error::Error::{InvalidOperation, RootNodeAlreadyPresent};
+use crate::node::Nodes;
 use crate::prelude::Node;
 
 /// The strategy to use when removing a node from the tree.
@@ -55,7 +56,7 @@ pub struct Tree<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
-	nodes: Vec<Node<Q, T>>,
+	nodes: Nodes<Q, T>,
 }
 
 impl<Q, T> Tree<Q, T>
@@ -341,7 +342,7 @@ impl<Q, T> Tree<Q, T>
 	///
 	/// assert_eq!(tree.get_nodes().len(), 1);
 	/// ```
-	pub fn get_nodes(&self) -> &Vec<Node<Q, T>> {
+	pub fn get_nodes(&self) -> &Nodes<Q, T> {
 		self.nodes.as_ref()
 	}
 
@@ -437,7 +438,7 @@ impl<Q, T> Tree<Q, T>
 	/// assert_eq!(subsection.get_nodes().len(), 2);
 	/// ```
 	pub fn get_subtree(&self, node_id: &Q, generations: Option<i32>) -> SubTree<Q, T> {
-		let mut subsection = Vec::new();
+		let mut subsection = Nodes::default();
 		if let Some(node) = self.get_node(node_id) {
 			subsection.push(node.clone());
 			// Get the subsequent children of the node recursively for the number of generations and add them to the subsection.
@@ -622,7 +623,7 @@ impl<Q, T> Default for Tree<Q, T>
 		T: PartialEq + Eq + Clone,
 {
 	fn default() -> Self {
-		Tree { nodes: Vec::new() }
+		Tree { nodes: Nodes::default() }
 	}
 }
 
@@ -690,7 +691,7 @@ impl<'de, Q, T> Deserialize<'de> for Tree<Q, T>
 
 		let tree_helper = TreeHelper::deserialize(deserializer)?;
 		Ok(Tree {
-			nodes: tree_helper.nodes,
+			nodes: Nodes::new(tree_helper.nodes),
 		})
 	}
 }
