@@ -44,7 +44,7 @@ A crude example of how to use the library is shown below:
 use tree_ds::prelude::{Node, NodeRemovalStrategy, Result, Tree};
 
 fn main() -> Result<()> {
-	let mut tree = Tree::new();
+	let mut tree = Tree::new(Some("Finances Tree"));
 	let root = tree.add_node(Node::new("Risk".to_string(), Some(5000)), None)?;
 	let fixed_income_node = tree.add_node(Node::new("Fixed Income".to_string(), Some(2000)), Some(&root))?;
 	let equity_node = tree.add_node(Node::new("Equity".to_string(), Some(3000)), Some(&root))?;
@@ -57,8 +57,6 @@ fn main() -> Result<()> {
 	tree.add_node(Node::new("Mid Cap Stocks".to_string(), Some(1000)), Some(&stocks_node))?;
 	tree.add_node(Node::new("Small Cap Stocks".to_string(), Some(1000)), Some(&stocks_node))?;
 
-	println!("Original Tree");
-	println!("*********************");
 	println!("{}", tree);
 
 
@@ -69,8 +67,6 @@ fn main() -> Result<()> {
 
 
 	let equity_sub_tree = tree.get_subtree(&equity_node, None);
-	println!("Equity Sub Tree");
-	println!("*********************");
 	println!("{}", equity_sub_tree);
 	Ok(())
 }
@@ -80,8 +76,8 @@ fn main() -> Result<()> {
 This will output:
 
 ```
-Original Tree
-*********************
+Finances Tree
+*************
 Risk: 5000
 ├── Fixed Income: 2000
 │   └── Debt: 1000
@@ -96,6 +92,8 @@ Risk: 5000
 
 After Removing The Stocks Node
 *******************
+Finances Tree
+*************
 Risk: 5000
 ├── Fixed Income: 2000
 │   └── Debt: 1000
@@ -104,8 +102,8 @@ Risk: 5000
     └── Mutual Funds: 1000
         └── Equity Mutual Funds: 500
 
-Equity Sub Tree
-*********************
+Equity
+******
 Equity: 3000
 └── Mutual Funds: 1000
     └── Equity Mutual Funds: 500

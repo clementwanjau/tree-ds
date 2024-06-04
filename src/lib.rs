@@ -12,7 +12,7 @@
 //! use tree_ds::prelude::*;
 //!
 //!
-//! let mut tree: Tree<i32, i32> = Tree::new();
+//! let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 //! let root = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 //! let child_1 = tree.add_node(Node::new(2, Some(3)), Some(&root)).unwrap();
 //! let child_2 = tree.add_node(Node::new(3, Some(4)), Some(&child_1)).unwrap();
@@ -40,7 +40,7 @@
 //! ```rust
 //! use tree_ds::prelude::*;
 //!
-//! let mut tree = Tree::new();
+//! let mut tree = Tree::new(Some("Sample Tree"));
 //! let root = tree.add_node(Node::new("Node 1", Some(2)), None).unwrap();
 //! let child_1 = tree.add_node(Node::new("Node 2", Some(3)), Some(&root)).unwrap();
 //! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1)).unwrap();
@@ -54,12 +54,14 @@
 //!     node.set_value(Some(cur_value + 1));
 //! });
 //!
-//! # assert_eq!("Node 1: 3\n└── Node 2: 4\n    └── Node 3: 5\n        └── Node 4: 6\n", tree.to_string());
+//! # assert_eq!("Sample Tree\n***********\nNode 1: 3\n└── Node 2: 4\n    └── Node 3: 5\n        └── Node 4: 6\n", tree.to_string());
 //! # assert_eq!(tree.get_node(&root).unwrap().get_value().unwrap(), 3);
 //! ```
 //!
 //! The newly modified tree will be:
 //! ```text
+//! Sample Tree
+//! ***********
 //! Node 1: 3
 //! └── Node 2: 4
 //!    └── Node 3: 5

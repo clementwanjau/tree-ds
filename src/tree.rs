@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::hash::Hash;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, ser::SerializeStruct, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
 use crate::error::Error::{InvalidOperation, RootNodeAlreadyPresent};
 use crate::node::Nodes;
@@ -41,21 +41,32 @@ pub type SubTree<Q, T> = Tree<Q, T>;
 /// This struct represents a tree data structure. A tree is a data structure that consists of nodes
 /// connected by edges. Each node has a parent node and zero or more child nodes. The tree has a root
 /// node that is the topmost node in the tree. The tree can be used to represent hierarchical data
-/// structures such as file systems, organization charts, and family trees.
+/// structures such as file systems, organization charts, and family trees. A tree can have any number
+/// of nodes and each node can have any number of children. The tree can be traversed in different
+/// orders such as pre-order, post-order, and in-order. The tree can be named for easy identification 
+/// when working with multiple trees or subtrees.
+///
+/// # Type Parameters
+///
+/// * `Q` - The type of the node id.
+/// * `T` - The type of the node value.
 ///
 /// # Example
 ///
 /// ```rust
 /// # use tree_ds::prelude::Tree;
 ///
-/// let tree: Tree<i32, i32> = Tree::new();
+/// let tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 /// ```
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Tree<Q, T>
 	where
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
+	#[serde(skip_serializing_if = "Option::is_none")]
+	name: Option<String>,
 	nodes: Nodes<Q, T>,
 }
 
@@ -77,10 +88,13 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::Tree;
 	///
-	/// let tree: Tree<i32, i32> = Tree::new();
+	/// let tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	/// ```
-	pub fn new() -> Self {
-		Tree::default()
+	pub fn new(tree_name: Option<&str>) -> Self {
+		Self {
+			name: tree_name.map(|x| x.to_string()),
+			nodes: Nodes::default(),
+		}
 	}
 
 	/// Add a node to the tree.
@@ -106,7 +120,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Tree, Node};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	/// let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// ```
 	pub fn add_node(
@@ -123,6 +137,48 @@ impl<Q, T> Tree<Q, T>
 		}
 		self.nodes.push(node.clone());
 		Ok(node.get_node_id())
+	}
+
+	/// Get the name of the tree.
+	///
+	/// This method gets the name of the tree.
+	///
+	/// # Returns
+	///
+	/// The name of the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Tree;
+	///
+	/// let tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
+	///
+	/// assert_eq!(tree.get_name(), Some("Sample Tree"));
+	/// ```
+	pub fn get_name(&self) -> Option<&str> {
+		self.name.as_deref()
+	}
+
+	/// Set the name of the tree.
+	///
+	/// This method sets the name of the tree.
+	///
+	/// # Arguments
+	///
+	/// * `name` - The name of the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::Tree;
+	///
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
+	/// tree.rename(Some("New Name"));
+	/// assert_eq!(tree.get_name(), Some("New Name"));
+	/// ```
+	pub fn rename(&mut self, name: Option<&str>) {
+		self.name = name.map(|x| x.to_string());
 	}
 
 	/// Get a node in the tree.
@@ -142,7 +198,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node = Node::new(1, Some(2));
 	/// let node_id = tree.add_node(node.clone(), None).unwrap();
@@ -170,7 +226,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node = Node::new(1, Some(2));
 	/// tree.add_node(node.clone(), None).unwrap();
@@ -199,7 +255,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -242,7 +298,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -276,7 +332,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -307,7 +363,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -335,7 +391,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node = Node::new(1, Some(2));
 	/// tree.add_node(node.clone(), None).unwrap();
@@ -363,7 +419,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree, NodeRemovalStrategy};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -428,7 +484,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree};
 	///
-	/// # let mut tree: Tree<i32, i32> = Tree::new();
+	/// # let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	///
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
@@ -460,8 +516,7 @@ impl<Q, T> Tree<Q, T>
 				}
 			}
 		}
-
-		SubTree { nodes: subsection }
+		SubTree { name: Some(node_id.to_string()), nodes: subsection }
 	}
 
 	/// Add a subsection to the tree.
@@ -480,9 +535,9 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree, SubTree};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	/// let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
-	/// let mut subtree = SubTree::new();
+	/// let mut subtree = SubTree::new(Some("Sample Tree"));
 	/// let node_2 = subtree.add_node(Node::new(2, Some(3)), None).unwrap();
 	/// subtree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
 	/// tree.add_subtree(&node_id, subtree);
@@ -515,7 +570,7 @@ impl<Q, T> Tree<Q, T>
 	/// ```rust
 	/// # use tree_ds::prelude::{Node, Tree, TraversalStrategy};
 	///
-	/// let mut tree: Tree<i32, i32> = Tree::new();
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 	/// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
@@ -623,7 +678,7 @@ impl<Q, T> Default for Tree<Q, T>
 		T: PartialEq + Eq + Clone,
 {
 	fn default() -> Self {
-		Tree { nodes: Nodes::default() }
+		Tree { name: None, nodes: Nodes::default() }
 	}
 }
 
@@ -633,6 +688,10 @@ impl<Q, T> Display for Tree<Q, T>
 		T: PartialEq + Eq + Clone + Display + Default,
 {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if let Some(name) = &self.name {
+			writeln!(f, "{}", name)?;
+			writeln!(f, "{}", name.clone().chars().map(|_| "*").collect::<String>())?;
+		}
 		if let Some(node) = self.get_root_node() {
 			Tree::print_tree(self, f, &node, 0, (false, 0), true)?;
 		} else {
@@ -653,49 +712,6 @@ impl<Q, T> Drop for Tree<Q, T>
 	}
 }
 
-
-#[cfg(feature = "serde")]
-impl<Q, T> Serialize for Tree<Q, T>
-	where
-		Q: PartialEq + Eq + Clone + Serialize,
-		T: PartialEq + Eq + Clone + Serialize,
-{
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-		where
-			S: Serializer,
-	{
-		let mut s = serializer.serialize_struct("Tree", 1)?;
-		s.serialize_field("nodes", &self.nodes)?;
-		s.end()
-	}
-}
-
-#[cfg(feature = "serde")]
-impl<'de, Q, T> Deserialize<'de> for Tree<Q, T>
-	where
-		Q: PartialEq + Eq + Clone + Deserialize<'de>,
-		T: PartialEq + Eq + Clone + Deserialize<'de>,
-{
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-		where
-			D: serde::Deserializer<'de>,
-	{
-		#[derive(Deserialize)]
-		struct TreeHelper<Q, T>
-			where
-				Q: PartialEq + Eq + Clone,
-				T: PartialEq + Eq + Clone,
-		{
-			nodes: Vec<Node<Q, T>>,
-		}
-
-		let tree_helper = TreeHelper::deserialize(deserializer)?;
-		Ok(Tree {
-			nodes: Nodes::new(tree_helper.nodes),
-		})
-	}
-}
-
 #[cfg(test)]
 mod tests {
 	use std::hash::{DefaultHasher, Hasher};
@@ -704,13 +720,13 @@ mod tests {
 
 	#[test]
 	fn test_tree_new() {
-		let tree = Tree::<u32, u32>::new();
+		let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
 		assert_eq!(tree.nodes.len(), 0);
 	}
 
 	#[test]
 	fn test_tree_add_node() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		assert_eq!(tree.nodes.len(), 1);
 		assert_eq!(node_id, 1);
@@ -723,7 +739,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_node() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node = Node::new(1, Some(2));
 		tree.add_node(node.clone(), None).unwrap();
 		assert_eq!(tree.get_node(&1), Some(node));
@@ -732,7 +748,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_nodes() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node = Node::new(1, Some(2));
 		tree.add_node(node.clone(), None).unwrap();
 		assert_eq!(tree.get_nodes().len(), 1);
@@ -740,7 +756,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_root_node() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node = Node::new(1, Some(2));
 		tree.add_node(node.clone(), None).unwrap();
 		assert_eq!(tree.get_root_node(), Some(node));
@@ -748,7 +764,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_node_height() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
@@ -759,7 +775,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_node_depth() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
@@ -770,7 +786,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_height() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
@@ -779,7 +795,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_node_degree() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
@@ -790,7 +806,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_remove_node() -> crate::prelude::Result<()> {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node = Node::new(1, Some(2));
 		tree.add_node(node.clone(), None)?;
 		let node_2 = Node::new(2, Some(3));
@@ -810,7 +826,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_get_subsection() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node = Node::new(1, Some(2));
 		tree.add_node(node.clone(), None).unwrap();
 		let node_2 = Node::new(2, Some(3));
@@ -822,6 +838,7 @@ mod tests {
 		let node_5 = Node::new(5, Some(6));
 		tree.add_node(node_5.clone(), Some(&3)).unwrap();
 		let subsection = tree.get_subtree(&2, None);
+		assert_eq!(subsection.get_name(), Some("2"));
 		assert_eq!(subsection.get_nodes().len(), 4);
 		let subsection = tree.get_subtree(&2, Some(0));
 		assert_eq!(subsection.get_nodes().len(), 1);
@@ -831,9 +848,9 @@ mod tests {
 
 	#[test]
 	fn test_tree_add_subsection() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
-		let mut subtree = SubTree::new();
+		let mut subtree = SubTree::new(Some("Sample Tree"));
 		let node_2 = subtree.add_node(Node::new(2, Some(3)), None).unwrap();
 		subtree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
 		tree.add_subtree(&node_id, subtree);
@@ -842,25 +859,25 @@ mod tests {
 
 	#[test]
 	fn test_tree_display() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
 		tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
 		tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
-		let expected_str = "1: 2\n└── 2: 3\n    ├── 3: 6\n    │   └── 5: 6\n    └── 4: 5\n";
+		let expected_str = "Sample Tree\n***********\n1: 2\n└── 2: 3\n    ├── 3: 6\n    │   └── 5: 6\n    └── 4: 5\n";
 		assert_eq!(tree.to_string(), expected_str);
 	}
 
 	#[test]
 	fn compare_tree() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
 		tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
 		tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
-		let mut tree_2 = Tree::new();
+		let mut tree_2 = Tree::new(Some("Sample Tree"));
 		let node_1 = tree_2.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree_2.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree_2.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
@@ -871,7 +888,7 @@ mod tests {
 
 	#[test]
 	fn test_tree_traverse() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
@@ -894,7 +911,7 @@ mod tests {
 	#[cfg(feature = "serde")]
 	#[test]
 	fn test_tree_serialize_and_deserialize() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(None);
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
@@ -909,13 +926,13 @@ mod tests {
 
 	#[test]
 	fn test_hashing() {
-		let mut tree = Tree::new();
+		let mut tree = Tree::new(Some("Sample Tree"));
 		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
 		tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
 		tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
-		let mut tree_2 = Tree::new();
+		let mut tree_2 = Tree::new(Some("Sample Tree"));
 		let node_1 = tree_2.add_node(Node::new(1, Some(2)), None).unwrap();
 		let node_2 = tree_2.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 		let node_3 = tree_2.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
