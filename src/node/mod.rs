@@ -11,6 +11,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
 use serde::ser::SerializeStruct;
 
+#[cfg(feature = "auto_id")]
+mod auto_id;
+
 /// A node in a tree.
 ///
 /// This struct represents a node in a tree. The node has a unique id, a value, children and a parent. The unique id
@@ -104,46 +107,25 @@ impl<Q, T> Node<Q, T>
 	///
 	/// let node = Node::new(1, Some(2));
 	/// ```
-	#[cfg(not(feature = "async"))]
 	pub fn new(node_id: Q, value: Option<T>) -> Self {
-		Node(Rc::new(RefCell::new(_Node {
-			node_id,
-			value,
-			children: vec![],
-			parent: None,
-		})))
-	}
-
-	/// Create a new node.
-	///
-	/// This method creates a new node with the given node id and value. The node id is used to identify the node
-	/// and the value is the value of the node. The value can be used to store any data that you want to associate
-	/// with the node.
-	///
-	/// # Arguments
-	///
-	/// * `node_id` - The id of the node.
-	/// * `value` - The value of the node.
-	///
-	/// # Returns
-	///
-	/// A new node with the given node id and value.
-	///
-	/// # Example
-	///
-	/// ```rust
-	/// # use tree_ds::prelude::Node;
-	///
-	/// let node = Node::new(1, Some(2));
-	/// ```
-	#[cfg(feature = "async")]
-	pub fn new(node_id: Q, value: Option<T>) -> Self {
-		Node(Arc::new(RefCell::new(_Node {
-			node_id,
-			value,
-			children: vec![],
-			parent: None,
-		})))
+		#[cfg(not(feature = "async"))]
+		{
+			Node(Rc::new(RefCell::new(_Node {
+				node_id,
+				value,
+				children: vec![],
+				parent: None,
+			})))
+		}
+		#[cfg(feature = "async")]
+		{
+			Node(Arc::new(RefCell::new(_Node {
+				node_id,
+				value,
+				children: vec![],
+				parent: None,
+			})))
+		}
 	}
 
 	/// Add a child to the node.
@@ -403,7 +385,7 @@ impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 		let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
 
 		#[cfg(not(feature = "async"))]
-		return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
+		return Ok(Node(Rc::new(RefCell::new(node))));
 		#[cfg(feature = "async")]
 		return Ok(Node(Arc::new(RefCell::new(node))));
 	}
