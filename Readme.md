@@ -119,7 +119,7 @@ The following example shows how to traverse the tree in a pre-order fashion:
 use tree_ds::prelude::{Node, Result, Tree, TraversalOrder};
 
 fn main() -> Result<()> {
-	let mut tree = Tree::new();
+	let mut tree = Tree::new(None);
 	let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
 	let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
 	let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
@@ -146,12 +146,12 @@ The following example shows how to traverse the tree in a pre-order fashion and 
 
 ```rust,ignore
 let nodes = tree.traverse(TraversalOrder::PreOrder)
+    .iter()
     .map(|node| {
         println!("{}", node);
         node
     })
     .collect::<Vec<_>>();
-
 ```
 
 ## Roadmap
