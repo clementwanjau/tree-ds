@@ -65,7 +65,7 @@ pub struct Tree<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
-	#[serde(skip_serializing_if = "Option::is_none")]
+	#[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
 	name: Option<String>,
 	nodes: Nodes<Q, T>,
 }
