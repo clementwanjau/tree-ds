@@ -414,7 +414,7 @@ impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 	}
 }
 
-/// An internal node in a tree.
+#[doc(hidden)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T>

@@ -674,6 +674,7 @@ impl<Q, T> Tree<Q, T>
 	/// Print the tree.
 	///
 	/// This method prints the tree to the standard output.
+	#[doc(hidden)]
 	fn print_tree(
 		tree: &Tree<Q, T>,
 		f: &mut std::fmt::Formatter<'_>,
@@ -764,6 +765,7 @@ impl<Q, T> Drop for Tree<Q, T>
 		T: PartialEq + Eq + Clone,
 {
 	/// Drop the tree.
+	#[doc(hidden)]
 	fn drop(&mut self) {
 		self.nodes.clear();
 	}
