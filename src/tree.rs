@@ -26,14 +26,26 @@ pub enum NodeRemovalStrategy {
 	RemoveNodeAndChildren,
 }
 
+/// The strategy to use when traversing the tree.
+///
+/// This enum represents the strategy to use when traversing the tree.
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Debug, Copy)]
 pub enum TraversalStrategy {
+	/// Traverse the tree in pre-order. This means that the root node is visited first, then the left
+	/// child, and then the right child.
 	PreOrder,
+	/// Traverse the tree in post-order. This means that the left child is visited first, then the right
+	/// child, and then the root node.
 	PostOrder,
+	/// Traverse the tree in in-order. This means that the left child is visited first, then the root node,
+	/// and then the right child.
 	InOrder,
 }
 
+/// A subtree of a tree.
+///
+/// This struct represents a subtree of a tree. A subtree is a tree that is a part of a larger tree.
 pub type SubTree<Q, T> = Tree<Q, T>;
 
 /// A tree data structure.
@@ -519,6 +531,48 @@ impl<Q, T> Tree<Q, T>
 		SubTree { name: Some(node_id.to_string()), nodes: subsection }
 	}
 
+	/// Get the siblings of a node in the tree.
+	///
+	/// This method gets the siblings of a node in the tree. The siblings of a node are the children
+	/// that share the same parent as the node.
+	///
+	/// # Arguments
+	///
+	/// * `node_id` - The id of the node to get the siblings of.
+	/// * `inclusive` - A flag that indicates whether to include the node in the siblings list.
+	///
+	/// # Returns
+	///
+	/// The siblings of the node in the tree.
+	///
+	/// # Example
+	///
+	/// ```rust
+	/// # use tree_ds::prelude::{Node, Tree};
+	///
+	/// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
+	/// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+	/// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+	/// tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
+	/// tree.add_node(Node::new(4, Some(7)), Some(&node_1)).unwrap();
+	///
+	/// let siblings = tree.get_siblings(&node_2, false);
+	/// assert_eq!(siblings.len(), 2);
+	///
+	/// let siblings = tree.get_siblings(&node_2, true);
+	/// assert_eq!(siblings.len(), 3);
+	/// ```
+	pub fn get_siblings(&self, node_id: &Q, inclusive: bool) -> Vec<Q> {
+		let node = self.get_node(node_id).unwrap();
+		let parent_id = node.get_parent().unwrap();
+		let parent = self.get_node(&parent_id).unwrap();
+		if inclusive {
+			parent.get_children().clone()
+		} else {
+			parent.get_children().iter().filter(|x| *x != node_id).cloned().collect()
+		}
+	}
+
 	/// Add a subsection to the tree.
 	///
 	/// This method adds a subsection to the tree. The subsection is a list of nodes that are descendants
@@ -620,6 +674,7 @@ impl<Q, T> Tree<Q, T>
 	/// Print the tree.
 	///
 	/// This method prints the tree to the standard output.
+	#[doc(hidden)]
 	fn print_tree(
 		tree: &Tree<Q, T>,
 		f: &mut std::fmt::Formatter<'_>,
@@ -677,6 +732,7 @@ impl<Q, T> Default for Tree<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
+	/// Create a new tree with no nodes.
 	fn default() -> Self {
 		Tree { name: None, nodes: Nodes::default() }
 	}
@@ -687,6 +743,7 @@ impl<Q, T> Display for Tree<Q, T>
 		Q: PartialEq + Eq + Clone + Display + Hash,
 		T: PartialEq + Eq + Clone + Display + Default,
 {
+	/// Print the tree.
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(name) = &self.name {
 			writeln!(f, "{}", name)?;
@@ -707,6 +764,8 @@ impl<Q, T> Drop for Tree<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
+	/// Drop the tree.
+	#[doc(hidden)]
 	fn drop(&mut self) {
 		self.nodes.clear();
 	}
@@ -844,6 +903,19 @@ mod tests {
 		assert_eq!(subsection.get_nodes().len(), 1);
 		let subsection = tree.get_subtree(&2, Some(1));
 		assert_eq!(subsection.get_nodes().len(), 3);
+	}
+
+	#[test]
+	fn get_siblings() {
+		let mut tree = Tree::new(Some("Sample Tree"));
+		let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+		let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+		tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
+		tree.add_node(Node::new(4, Some(7)), Some(&node_1)).unwrap();
+		let siblings = tree.get_siblings(&node_2, false);
+		assert_eq!(siblings.len(), 2);
+		let siblings = tree.get_siblings(&node_2, true);
+		assert_eq!(siblings.len(), 3);
 	}
 
 	#[test]
