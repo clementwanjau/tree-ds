@@ -19,10 +19,14 @@ default = []
 async = []
 # The "serde" feature enables serialization and deserialization of the library's types.
 serde = ["dep:serde"]
+# This feature enables the automatic generation of unique identifiers for nodes.
+auto_id = ["dep:unique_id", "dep:lazy_static"]
 
 [dependencies]
 serde = { version = "1.0", optional = true, features = ["derive", "rc"] }
 thiserror = "1.0.61"
+unique_id = { version = "0.1.5", optional = true }
+lazy_static = { version = "1.4.0", optional = true }
 
 [dev-dependencies]
 serde_json = { version = "1.0" }

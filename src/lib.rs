@@ -1,10 +1,9 @@
 //! # Tree-DS
 //! A simple tree data structure implementation in Rust.
 //!
-//! ## Cargo Features
-//! - `default`: By default the library is synchronous.
-//! - `async`: Enables support for async operations on the tree.
-//! - `serde`: Enables serialization and deserialization of the tree.
+//! The tree data structure is a hierarchical data structure that consists of nodes connected by
+//! edges. Each node in the tree can have zero or more children nodes. The tree data structure
+//! is used in various applications, such as file systems, computer science, and biology.
 //!
 //! ## Usage
 //!
@@ -19,6 +18,31 @@
 //! let child_3 = tree.add_node(Node::new(4, Some(5)), Some(&child_2)).unwrap();
 //! let sub_tree = tree.get_subtree(&child_2, None);
 //!
+//! ```
+//!
+//! ## Nodes
+//! A Node is the building blocks of the tree data structure. Each node in the tree can have a value
+//! and a unique ID. The value can be of any type that implements the `Eq`, `PartialEq` and `Clone`
+//! traits.
+//!
+//! By default, the tree requires you to provide unique IDs for the nodes. This node Ids can be of
+//! any type that implements the `Eq` and `Clone` traits.
+//!
+//! ```rust
+//! use tree_ds::prelude::*;
+//!
+//! let node = Node::new(1, Some(2));
+//! ```
+//! However, you can enable the `auto_id` feature to generate IDs automatically. This is useful when
+//! you want to create a node without specifying the ID. For a node to be created with an auto-generated
+//! ID, the `Q` type must implement the `From<i32>` trait.
+//!
+//! ```rust
+//! use tree_ds::prelude::*;
+//!
+//! let node = Node::<i32, &str>::new_with_auto_id(Some("Harry Doe"));
+//! let node_2 = Node::<i32, &str>::new_with_auto_id(Some("Jane Doe"));
+//! assert_ne!(node.get_node_id(), node_2.get_node_id());
 //! ```
 //!
 //! ## Traversal
@@ -67,7 +91,12 @@
 //!    └── Node 3: 5
 //!        └── Node 4: 6
 //! ```
-
+//!
+//! ## Cargo Features
+//! - `default`: By default the library is synchronous, and you need to provide ids for the nodes.
+//! - `async`: Enables support for async operations on the tree.
+//! - `serde`: Enables serialization and deserialization of the tree.
+//! - `auto_id`: Enables auto-generation of node IDs.
 mod error;
 mod node;
 mod tree;
