@@ -70,8 +70,18 @@ impl<Q, T> Node<Q, T>
 mod tests {
 	use super::*;
 
+	#[cfg(not(feature = "async"))]
 	#[test]
 	fn test_new_with_auto_id() {
+		let node = Node::<i32, &str>::new_with_auto_id(Some("Harry Doe"));
+		let node_2 = Node::<i32, &str>::new_with_auto_id(Some("Jane Doe"));
+		assert_eq!(node.get_value(), Some("Harry Doe"));
+		assert_ne!(node.get_node_id(), node_2.get_node_id());
+	}
+
+	#[cfg(feature = "async")]
+	#[test]
+	fn test_new_with_auto_id_async() {
 		let node = Node::<i32, &str>::new_with_auto_id(Some("Harry Doe"));
 		let node_2 = Node::<i32, &str>::new_with_auto_id(Some("Jane Doe"));
 		assert_eq!(node.get_value(), Some("Harry Doe"));
