@@ -338,6 +338,7 @@ impl<Q, T> PartialEq for Node<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
+	/// Compare two nodes for equality.
 	fn eq(&self, other: &Self) -> bool {
 		self.get_node_id() == other.get_node_id() && self.get_value() == other.get_value()
 	}
@@ -348,6 +349,7 @@ impl<Q, T> Display for Node<Q, T>
 		Q: PartialEq + Eq + Clone + Display,
 		T: PartialEq + Eq + Clone + Display + Default,
 {
+	/// Display the node.
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(
 			f,
@@ -363,6 +365,7 @@ impl<Q, T> Hash for Node<Q, T>
 		Q: PartialEq + Eq + Clone + Hash,
 		T: PartialEq + Eq + Clone + Hash,
 {
+	/// Hash the node.
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.get_node_id().hash(state);
 		self.get_value().hash(state);
@@ -377,6 +380,7 @@ impl<Q, T> Serialize for Node<Q, T>
 		Q: PartialEq + Eq + Clone + Serialize,
 		T: PartialEq + Eq + Clone + Serialize,
 {
+	/// Serialize the node.
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 		where
 			S: serde::Serializer,
@@ -396,6 +400,7 @@ impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 		Q: PartialEq + Eq + Clone + Deserialize<'de>,
 		T: PartialEq + Eq + Clone + Deserialize<'de>,
 {
+	/// Deserialize the node.
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 		where
 			D: serde::Deserializer<'de>,
@@ -403,12 +408,13 @@ impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 		let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
 
 		#[cfg(not(feature = "async"))]
-		return Ok(crate::node::Node(Rc::new(RefCell::new(node))));
+		return Ok(Node(Rc::new(RefCell::new(node))));
 		#[cfg(feature = "async")]
 		return Ok(Node(Arc::new(RefCell::new(node))));
 	}
 }
 
+/// An internal node in a tree.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T>
@@ -731,6 +737,7 @@ impl<Q, T> AsRef<Nodes<Q, T>> for Nodes<Q, T> where
 	Q: PartialEq + Eq + Clone,
 	T: PartialEq + Eq + Clone
 {
+	/// Get a reference to the nodes list.
 	fn as_ref(&self) -> &Nodes<Q, T> {
 		self
 	}
@@ -740,6 +747,7 @@ impl<Q, T> FromIterator<Node<Q, T>> for Nodes<Q, T> where
 	Q: PartialEq + Eq + Clone,
 	T: PartialEq + Eq + Clone
 {
+	/// Create a nodes list from an iterator.
 	fn from_iter<I: IntoIterator<Item=Node<Q, T>>>(iter: I) -> Self {
 		Nodes(iter.into_iter().collect())
 	}
@@ -751,11 +759,13 @@ impl<Q, T> Iterator for Nodes<Q, T> where
 {
 	type Item = Node<Q, T>;
 
+	/// Get the next node in the nodes list.
 	#[allow(clippy::iter_next_slice)]
 	fn next(&mut self) -> Option<Self::Item> {
 		self.0.iter().next().cloned()
 	}
 
+	/// Get the size hint of the nodes list.
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		self.0.iter().size_hint()
 	}
@@ -765,12 +775,14 @@ impl<Q, T> Default for Nodes<Q, T> where
 	Q: PartialEq + Eq + Clone,
 	T: PartialEq + Eq + Clone
 {
+	/// Create an empty nodes list.
 	fn default() -> Self {
 		Nodes(vec![])
 	}
 }
 
 impl<Q, T> Display for Nodes<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
+	/// Display the nodes list.
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		for node in self.iter() {
 			write!(f, "{}", node)?;

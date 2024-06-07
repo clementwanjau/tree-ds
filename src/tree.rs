@@ -26,14 +26,26 @@ pub enum NodeRemovalStrategy {
 	RemoveNodeAndChildren,
 }
 
+/// The strategy to use when traversing the tree.
+///
+/// This enum represents the strategy to use when traversing the tree.
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Debug, Copy)]
 pub enum TraversalStrategy {
+	/// Traverse the tree in pre-order. This means that the root node is visited first, then the left
+	/// child, and then the right child.
 	PreOrder,
+	/// Traverse the tree in post-order. This means that the left child is visited first, then the right
+	/// child, and then the root node.
 	PostOrder,
+	/// Traverse the tree in in-order. This means that the left child is visited first, then the root node,
+	/// and then the right child.
 	InOrder,
 }
 
+/// A subtree of a tree.
+///
+/// This struct represents a subtree of a tree. A subtree is a tree that is a part of a larger tree.
 pub type SubTree<Q, T> = Tree<Q, T>;
 
 /// A tree data structure.
@@ -677,6 +689,7 @@ impl<Q, T> Default for Tree<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
+	/// Create a new tree with no nodes.
 	fn default() -> Self {
 		Tree { name: None, nodes: Nodes::default() }
 	}
@@ -687,6 +700,7 @@ impl<Q, T> Display for Tree<Q, T>
 		Q: PartialEq + Eq + Clone + Display + Hash,
 		T: PartialEq + Eq + Clone + Display + Default,
 {
+	/// Print the tree.
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(name) = &self.name {
 			writeln!(f, "{}", name)?;
@@ -707,6 +721,7 @@ impl<Q, T> Drop for Tree<Q, T>
 		Q: PartialEq + Eq + Clone,
 		T: PartialEq + Eq + Clone,
 {
+	/// Drop the tree.
 	fn drop(&mut self) {
 		self.nodes.clear();
 	}

@@ -80,5 +80,6 @@ pub mod prelude {
         tree::{NodeRemovalStrategy, SubTree, TraversalStrategy, Tree},
     };
 
-    pub type Result<T> = std::result::Result<T, crate::error::Error>;
+    /// The error type for this crate.
+	pub type Result<T> = std::result::Result<T, crate::error::Error>;
 }
