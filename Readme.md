@@ -1,9 +1,15 @@
 # Tree-ds
 
-[![Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/build.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/build.yaml)
+[![Linux Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/linux.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/linux.yaml)
+[![MacOs Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/macos.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/macos.yaml)
+[![Windows Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/windows.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/windows.yaml)
+[![codecov](https://codecov.io/gh/clementwanjau/tree-ds/branch/main/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/clementwanjau/tree-ds)
+
 [![Crates.io](https://img.shields.io/crates/v/tree-ds.svg)](https://crates.io/crates/tree-ds)
 [![Documentation](https://docs.rs/tree-ds/badge.svg)](https://docs.rs/tree-ds)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+![GitHub](https://img.shields.io/github/stars/clementwanjau/tree-ds?style=social)
 
 This library provides a tree data structure that can be used to represent
 hierarchical data in Rust. The library

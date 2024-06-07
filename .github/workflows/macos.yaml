@@ -1,0 +1,19 @@
+name: MacOs Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-on-macos-latest:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: cargo build --release
+      - name: Test
+        run: cargo test --all-features
