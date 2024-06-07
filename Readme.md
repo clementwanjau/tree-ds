@@ -38,6 +38,50 @@ Add the following to your `Cargo.toml` file:
 tree-ds = "0.1"
 ```
 
+### Nodes
+
+The basic building block of the library is the `Node` struct. The `Node` struct
+is a generic struct that can hold any type of data. The `Node` struct can be created
+as follows:
+
+```rust,ignore
+use tree_ds::prelude::*;
+
+let node: Node<String, i32> = Node::new("Root Node".to_string(), Some(100));
+``` 
+
+Optionally the crate provides an `auto_id` feature to automatically generate an Id
+for the node. This is useful when you are not concerned with the Id of the node and
+you want to avoid the overhead of managing the Ids. To enable the `auto_id`
+feature, add the following to your `Cargo.toml` file:
+
+```toml copy
+[dependencies]
+tree-ds = { version = "0.1", features = ["auto_id"] }
+```
+
+Then you can create a node as follows:
+
+```rust,ignore
+use tree_ds::prelude::*;
+
+// Not that in this case, the `Q` type parameter should be of type `i32` or any other type that implements the `From<i32>` trait.
+let node: Node<i32, &str> = Node::new_with_auto_id(Some("Some Node Value"));
+```
+
+### Trees
+
+The `Tree` struct is the main struct that is used to represent a tree. The `Tree`
+struct is generic over the type of data that the nodes in the tree hold. The `Tree`
+struct can be created as follows:
+
+```rust,ignore
+use tree_ds::prelude::*;
+
+let mut tree: Tree<String, i32> = Tree::new(Some("The Tree Name"));
+// Proceed to build the tree by adding nodes to it.
+```
+
 A crude example of how to use the library is shown below:
 
 ```rust
@@ -109,7 +153,7 @@ Equity: 3000
     └── Equity Mutual Funds: 500
 ```
 
-## Traversal
+#### Traversal
 
 You can traverse the tree using the `traverse` method. The `traverse` method
 returns an iterator that allows you to traverse the tree in any order you want.
