@@ -3,7 +3,7 @@
 [![Linux Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/linux.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/linux.yaml)
 [![MacOs Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/macos.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/macos.yaml)
 [![Windows Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/windows.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/windows.yaml)
-[![codecov](https://codecov.io/gh/clementwanjau/tree-ds/branch/main/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/clementwanjau/tree-ds)
+[![codecov](https://codecov.io/github/clementwanjau/tree-ds/graph/badge.svg?token=6EVSRDH76I)](https://codecov.io/github/clementwanjau/tree-ds)
 
 [![Crates.io](https://img.shields.io/crates/v/tree-ds.svg)](https://crates.io/crates/tree-ds)
 [![Documentation](https://docs.rs/tree-ds/badge.svg)](https://docs.rs/tree-ds)
