@@ -166,7 +166,7 @@ returns an iterator that allows you to traverse the tree in any order you want.
 The following example shows how to traverse the tree in a pre-order fashion:
 
 ```rust
-use tree_ds::prelude::{Node, Result, Tree, TraversalOrder};
+use tree_ds::prelude::{Node, Result, Tree, TraversalStrategy};
 
 fn main() -> Result<()> {
 	let mut tree = Tree::new(None);
@@ -195,7 +195,7 @@ You can also perform an action on the nodes while traversing the tree on the ite
 The following example shows how to traverse the tree in a pre-order fashion and perform an action on the nodes:
 
 ```rust,ignore
-let nodes = tree.traverse(TraversalOrder::PreOrder)
+let nodes = tree.traverse(TraversalStrategy::PreOrder)
     .iter()
     .map(|node| {
         println!("{}", node);
