@@ -564,12 +564,20 @@ impl<Q, T> Tree<Q, T>
 	/// ```
 	pub fn get_siblings(&self, node_id: &Q, inclusive: bool) -> Vec<Q> {
 		let node = self.get_node(node_id).unwrap();
-		let parent_id = node.get_parent().unwrap();
-		let parent = self.get_node(&parent_id).unwrap();
-		if inclusive {
-			parent.get_children().clone()
+		if let Some(parent_id) = node.get_parent() {
+			let parent = self.get_node(&parent_id).unwrap();
+			if inclusive {
+				parent.get_children().clone()
+			} else {
+				parent.get_children().iter().filter(|x| *x != node_id).cloned().collect()
+			}
 		} else {
-			parent.get_children().iter().filter(|x| *x != node_id).cloned().collect()
+			if inclusive {
+				// We need to clone this since Q does not implement Copy.
+				vec![node_id.clone()]
+			} else {
+				vec![]
+			}
 		}
 	}
 
