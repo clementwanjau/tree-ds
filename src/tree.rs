@@ -573,7 +573,8 @@ impl<Q, T> Tree<Q, T>
 			}
 		} else {
 			if inclusive {
-				vec![node_id]
+				// We need to clone this since Q does not implement Copy.
+				vec![node_id.clone()]
 			} else {
 				vec![]
 			}
