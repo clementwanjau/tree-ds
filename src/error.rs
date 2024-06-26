@@ -13,6 +13,7 @@ pub enum Error {
     #[error("Node {0} not found in the tree.")]
     NodeNotFound(String),
     /// An error occurred while formatting the output.
+    #[allow(clippy::enum_variant_names)]
     #[error("{0}")]
     FmtError(#[from] std::fmt::Error),
 }
