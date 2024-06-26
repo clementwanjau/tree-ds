@@ -339,6 +339,49 @@ where
         Ok(depth)
     }
 
+    /// Get the ancestors of a node in the tree.
+    ///
+    /// This method gets the ancestors of a node in the tree. The ancestors of a node are all the nodes
+    /// that are on the path from the root node to the node, not including the node itself.
+    ///
+    /// # Arguments
+    ///
+    /// * `node_id` - The id of the node.
+    ///
+    /// # Returns
+    ///
+    /// The ancestors of the node from closest to furthest.  This method returns an error if the node is not found in the tree.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use tree_ds::prelude::{Node, Tree};
+    ///
+    /// let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
+    ///
+    /// let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+    /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+    /// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+    /// let depth_result = tree.get_ancestor_ids(&node_3);
+    /// assert!(depth_result.is_ok());
+    /// assert_eq!(depth_result.unwrap(), vec![2, 1]);
+    /// ```
+    pub fn get_ancestor_ids(&self, node_id: &Q) -> Result<Vec<Q>> {
+        let node = self
+            .get_node_by_id(node_id)
+            .ok_or(NodeNotFound(node_id.to_string()))?;
+        let mut ancestors = vec![];
+        let mut parent = node.get_parent_id();
+        while let Some(parent_id) = parent {
+            ancestors.push(parent_id.clone());
+            parent = self
+                .get_node_by_id(&parent_id)
+                .ok_or(NodeNotFound(parent_id.to_string()))?
+                .get_parent_id();
+        }
+        Ok(ancestors)
+    }
+
     /// Get the height of the tree.
     ///
     /// This method gets the height of the tree. The height of the tree is the length of the longest path
@@ -949,6 +992,19 @@ mod tests {
         assert_eq!(tree.get_node_depth(&node_3).unwrap(), 2);
         assert_eq!(tree.get_node_depth(&node_2).unwrap(), 1);
         assert_eq!(tree.get_node_depth(&node_1).unwrap(), 0);
+    }
+
+    #[test]
+    fn test_tree_get_ancestor_ids() {
+        let mut tree = Tree::new(Some("Sample Tree"));
+        let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
+        let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
+        let node_4 = tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
+        assert_eq!(tree.get_ancestor_ids(&node_4).unwrap(), vec![2,1]);
+        assert_eq!(tree.get_ancestor_ids(&node_3).unwrap(), vec![2,1]);
+        assert_eq!(tree.get_ancestor_ids(&node_2).unwrap(), vec![1]);
+        assert_eq!(tree.get_ancestor_ids(&node_1).unwrap(), Vec::<i32>::new());
     }
 
     #[test]
