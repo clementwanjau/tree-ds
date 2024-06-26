@@ -56,8 +56,8 @@ use tree_ds::prelude::*;
 let node: Node<String, i32> = Node::new("Root Node".to_string(), Some(100));
 ``` 
 
-Optionally the crate provides an `auto_id` feature to automatically generate an Id
-for the node. This is useful when you are not concerned with the Id of the node and
+Optionally the crate provides an `auto_id` feature to automatically generate an id
+for the node. This is useful when you are not concerned with the id of the node, and
 you want to avoid the overhead of managing the Ids. To enable the `auto_id`
 feature, add the following to your `Cargo.toml` file:
 
@@ -110,13 +110,13 @@ fn main() -> Result<()> {
 	println!("{}", tree);
 
 
-	tree.remove_node(&stocks_node, NodeRemovalStrategy::RemoveNodeAndChildren);
+	tree.remove_node(&stocks_node, NodeRemovalStrategy::RemoveNodeAndChildren)?;
 	println!("After Removing The Stocks Node");
 	println!("*******************");
 	println!("{}", tree);
 
 
-	let equity_sub_tree = tree.get_subtree(&equity_node, None);
+	let equity_sub_tree = tree.get_subtree(&equity_node, None)?;
 	println!("{}", equity_sub_tree);
 	Ok(())
 }
@@ -170,21 +170,21 @@ use tree_ds::prelude::{Node, Result, Tree, TraversalStrategy};
 
 fn main() -> Result<()> {
 	let mut tree = Tree::new(None);
-	let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
-	let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
-	let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1)).unwrap();
-	let node_4 = tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
-	let node_5 = tree.add_node(Node::new(5, Some(6)), Some(&node_2)).unwrap();
-	let node_6 = tree.add_node(Node::new(6, Some(7)), Some(&node_3)).unwrap();
-	let preorder_nodes = tree.traverse(TraversalStrategy::PreOrder, &node_1);
+	let node_1 = tree.add_node(Node::new(1, Some(2)), None)?;
+	let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1))?;
+	let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_1))?;
+	let node_4 = tree.add_node(Node::new(4, Some(5)), Some(&node_2))?;
+	let node_5 = tree.add_node(Node::new(5, Some(6)), Some(&node_2))?;
+	let node_6 = tree.add_node(Node::new(6, Some(7)), Some(&node_3))?;
+	let preorder_nodes = tree.traverse(TraversalStrategy::PreOrder, &node_1)?;
 	let expected_preorder = vec![node_1, node_2, node_4, node_5, node_3, node_6];
 	assert_eq!(preorder_nodes, expected_preorder);
 
-	let in_order_nodes = tree.traverse(TraversalStrategy::InOrder, &node_1);
+	let in_order_nodes = tree.traverse(TraversalStrategy::InOrder, &node_1)?;
 	let expected_in_order = vec![node_4, node_2, node_5, node_1, node_3, node_6];
 	assert_eq!(in_order_nodes, expected_in_order);
 
-	let post_order_nodes = tree.traverse(TraversalStrategy::PostOrder, &node_1);
+	let post_order_nodes = tree.traverse(TraversalStrategy::PostOrder, &node_1)?;
 	let expected_post_order = vec![node_4, node_5, node_2, node_6, node_3, node_1];
 	assert_eq!(post_order_nodes, expected_post_order);
 	Ok(())
@@ -195,7 +195,7 @@ You can also perform an action on the nodes while traversing the tree on the ite
 The following example shows how to traverse the tree in a pre-order fashion and perform an action on the nodes:
 
 ```rust,ignore
-let nodes = tree.traverse(TraversalStrategy::PreOrder)
+let nodes = tree.traverse(TraversalStrategy::PreOrder)?
     .iter()
     .map(|node| {
         println!("{}", node);
@@ -214,3 +214,7 @@ let nodes = tree.traverse(TraversalStrategy::PreOrder)
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Change Log
+
+Check the [CHANGELOG](CHANGELOG.md) for the latest changes.
