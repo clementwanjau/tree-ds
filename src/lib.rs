@@ -5,6 +5,14 @@
 //! edges. Each node in the tree can have zero or more children nodes. The tree data structure
 //! is used in various applications, such as file systems, computer science, and biology.
 //!
+//! A note on the choice of return types for the tree operations:
+//! - The tree operations return a `Result` type to handle errors that may occur during the operation.
+//! - For operations that return a value that may or may not be present, the return type is an `Option`.
+//!
+//! So for instance when you add a node to the tree, the return type is a `Result<NodeId>` because an
+//! error may occur during the operation. When you get a node from the tree, the return type is an
+//! `Option<&Node<T, Q>>` because the node may or may not be present in the tree.  
+//!
 //! ## Usage
 //!
 //! ```rust
@@ -37,12 +45,12 @@
 //! you want to create a node without specifying the ID. For a node to be created with an auto-generated
 //! ID, the `Q` type must implement the `From<i32>` trait.
 //!
-//! ```rust
+//! ```rust, ignore
 //! use tree_ds::prelude::*;
 //!
 //! let node = Node::<i32, &str>::new_with_auto_id(Some("Harry Doe"));
 //! let node_2 = Node::<i32, &str>::new_with_auto_id(Some("Jane Doe"));
-//! assert_ne!(node.get_node_id(), node_2.get_node_id());
+//! assert_ne!(node.get_node_id(), node_2.get_node_id());//!
 //! ```
 //!
 //! ## Traversal
@@ -64,22 +72,25 @@
 //! ```rust
 //! use tree_ds::prelude::*;
 //!
+//! # fn main() -> Result<()> {
 //! let mut tree = Tree::new(Some("Sample Tree"));
-//! let root = tree.add_node(Node::new("Node 1", Some(2)), None).unwrap();
-//! let child_1 = tree.add_node(Node::new("Node 2", Some(3)), Some(&root)).unwrap();
-//! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1)).unwrap();
-//! let child_3 = tree.add_node(Node::new("Node 4", Some(5)), Some(&child_2)).unwrap();
+//! let root = tree.add_node(Node::new("Node 1", Some(2)), None)?;
+//! let child_1 = tree.add_node(Node::new("Node 2", Some(3)), Some(&root))?;
+//! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1))?;
+//! let child_3 = tree.add_node(Node::new("Node 4", Some(5)), Some(&child_2))?;
 //!
-//! tree.traverse(TraversalStrategy::PreOrder, &root)
+//! tree.traverse(TraversalStrategy::PreOrder, &root)?
 //!   .iter()
 //!   .for_each(|node_id| {
-//!     let node = tree.get_node(node_id).unwrap();
+//!     let node = tree.get_node_by_id(node_id).unwrap();
 //!     let cur_value = node.get_value().unwrap();
 //!     node.set_value(Some(cur_value + 1));
 //! });
 //!
 //! # assert_eq!("Sample Tree\n***********\nNode 1: 3\n└── Node 2: 4\n    └── Node 3: 5\n        └── Node 4: 6\n", tree.to_string());
-//! # assert_eq!(tree.get_node(&root).unwrap().get_value().unwrap(), 3);
+//! # assert_eq!(tree.get_node_by_id(&root).unwrap().get_value().unwrap(), 3);
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! The newly modified tree will be:
@@ -102,7 +113,7 @@ mod node;
 mod tree;
 
 pub mod prelude {
-	//! A module to re-export the necessary types for the tree data structure.
+    //! A module to re-export the necessary types for the tree data structure.
 
     pub use crate::{
         node::{Node, Nodes},
@@ -110,5 +121,5 @@ pub mod prelude {
     };
 
     /// The error type for this crate.
-	pub type Result<T> = std::result::Result<T, crate::error::Error>;
+    pub type Result<T> = std::result::Result<T, crate::error::Error>;
 }

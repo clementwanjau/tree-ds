@@ -43,9 +43,9 @@ mod auto_id;
 #[cfg(not(feature = "async"))]
 #[derive(Clone, Debug, Eq)]
 pub struct Node<Q, T>(Rc<RefCell<_Node<Q, T>>>)
-	where
-		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone;
+where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone;
 
 /// A node in a tree.
 ///
@@ -76,14 +76,14 @@ pub struct Node<Q, T>(Rc<RefCell<_Node<Q, T>>>)
 #[cfg(feature = "async")]
 #[derive(Clone, Debug, Eq)]
 pub struct Node<Q, T>(Arc<RefCell<_Node<Q, T>>>)
-	where
-		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone;
+where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone;
 
 impl<Q, T> Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone,
+where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone,
 {
 	/// Create a new node.
 	///
@@ -159,6 +159,10 @@ impl<Q, T> Node<Q, T>
 	///
 	/// This method removes a child from the node. The child is removed from the children of the node and the parent
 	/// of the child is set to `None`.
+	/// The reason as to why we pass the child as an argument instead of the node id is because we want to ensure that the
+	/// parent of the child is set to `None` when the child is removed from this parent. If we were to pass the node id
+	/// of the child as an argument, we would have to get the child from the tree and then set the parent to `None`. And
+	/// at this level we have no knowledge of the tree.
 	///
 	/// # Arguments
 	///
@@ -201,13 +205,13 @@ impl<Q, T> Node<Q, T>
 		self.0.borrow().node_id.clone()
 	}
 
-	/// Get the children of the node.
+	/// Get the ids of the children of the node.
 	///
-	/// This method returns the children of the node.
+	/// This method returns the ids of the children of the node.
 	///
 	/// # Returns
 	///
-	/// The children of the node.
+	/// The ids of the children of the node.
 	///
 	/// # Example
 	///
@@ -217,9 +221,9 @@ impl<Q, T> Node<Q, T>
 	/// let node = Node::new(1, Some(2));
 	/// let child = Node::new(2, Some(3));
 	/// node.add_child(child);
-	/// assert_eq!(node.get_children().len(), 1);
+	/// assert_eq!(node.get_children_ids().len(), 1);
 	/// ```
-	pub fn get_children(&self) -> Vec<Q> {
+	pub fn get_children_ids(&self) -> Vec<Q> {
 		self.0.borrow().children.clone()
 	}
 
@@ -240,10 +244,10 @@ impl<Q, T> Node<Q, T>
 	/// let parent_node = Node::new(1, Some(2));
 	/// let child_node = Node::new(2, Some(3));
 	/// parent_node.add_child(child_node.clone());
-	/// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
-	/// assert!(parent_node.get_parent().is_none());
+	/// assert_eq!(child_node.get_parent_id().as_ref(), Some(&parent_node.get_node_id()));
+	/// assert!(parent_node.get_parent_id().is_none());
 	/// ```
-	pub fn get_parent(&self) -> Option<Q> {
+	pub fn get_parent_id(&self) -> Option<Q> {
 		self.0.borrow().parent.clone()
 	}
 
@@ -305,7 +309,7 @@ impl<Q, T> Node<Q, T>
 	/// let parent_node = Node::new(1, Some(2));
 	/// let child_node = Node::new(2, Some(3));
 	/// child_node.set_parent(Some(parent_node.clone()));
-	/// assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
+	/// assert_eq!(child_node.get_parent_id().as_ref(), Some(&parent_node.get_node_id()));
 	/// ```
 	pub fn set_parent(&self, parent: Option<Node<Q, T>>) {
 		if let Some(parent) = parent.as_ref() {
@@ -316,9 +320,9 @@ impl<Q, T> Node<Q, T>
 }
 
 impl<Q, T> PartialEq for Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone,
+where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone,
 {
 	/// Compare two nodes for equality.
 	fn eq(&self, other: &Self) -> bool {
@@ -327,9 +331,9 @@ impl<Q, T> PartialEq for Node<Q, T>
 }
 
 impl<Q, T> Display for Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone + Display,
-		T: PartialEq + Eq + Clone + Display + Default,
+where
+	Q: PartialEq + Eq + Clone + Display,
+	T: PartialEq + Eq + Clone + Display + Default,
 {
 	/// Display the node.
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -343,49 +347,49 @@ impl<Q, T> Display for Node<Q, T>
 }
 
 impl<Q, T> Hash for Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone + Hash,
-		T: PartialEq + Eq + Clone + Hash,
+where
+	Q: PartialEq + Eq + Clone + Hash,
+	T: PartialEq + Eq + Clone + Hash,
 {
 	/// Hash the node.
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.get_node_id().hash(state);
 		self.get_value().hash(state);
-		self.get_children().hash(state);
-		self.get_parent().hash(state);
+		self.get_children_ids().hash(state);
+		self.get_parent_id().hash(state);
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<Q, T> Serialize for Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone + Serialize,
-		T: PartialEq + Eq + Clone + Serialize,
+where
+	Q: PartialEq + Eq + Clone + Serialize,
+	T: PartialEq + Eq + Clone + Serialize,
 {
 	/// Serialize the node.
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-		where
-			S: serde::Serializer,
+	where
+		S: serde::Serializer,
 	{
 		let mut state = serializer.serialize_struct("Node", 4)?;
 		state.serialize_field("node_id", &self.get_node_id())?;
 		state.serialize_field("value", &self.get_value())?;
-		state.serialize_field("children", &self.get_children())?;
-		state.serialize_field("parent", &self.get_parent())?;
+		state.serialize_field("children", &self.get_children_ids())?;
+		state.serialize_field("parent", &self.get_parent_id())?;
 		state.end()
 	}
 }
 
 #[cfg(feature = "serde")]
 impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone + Deserialize<'de>,
-		T: PartialEq + Eq + Clone + Deserialize<'de>,
+where
+	Q: PartialEq + Eq + Clone + Deserialize<'de>,
+	T: PartialEq + Eq + Clone + Deserialize<'de>,
 {
 	/// Deserialize the node.
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-		where
-			D: serde::Deserializer<'de>,
+	where
+		D: serde::Deserializer<'de>,
 	{
 		let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
 
@@ -400,9 +404,9 @@ impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T>
-	where
-		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone,
+where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone,
 {
 	/// The user supplied id of the node.
 	node_id: Q,
@@ -427,13 +431,15 @@ pub(crate) struct _Node<Q, T>
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Nodes<Q, T>(Vec<Node<Q, T>>)
-	where
-		Q: PartialEq + Eq + Clone,
-		T: PartialEq + Eq + Clone;
-
-impl<Q, T> Nodes<Q, T> where
+where
 	Q: PartialEq + Eq + Clone,
-	T: PartialEq + Eq + Clone {
+	T: PartialEq + Eq + Clone;
+
+impl<Q, T> Nodes<Q, T>
+where
+	Q: PartialEq + Eq + Clone,
+	T: PartialEq + Eq + Clone,
+{
 	/// Create a new iterator over the nodes in a tree.
 	///
 	/// This method creates a new iterator over the nodes in a tree.
@@ -626,8 +632,9 @@ impl<Q, T> Nodes<Q, T> where
 	/// nodes.retain(|node| node.get_node_id() == 1);
 	/// assert_eq!(nodes.len(), 1);
 	/// ```
-	pub fn retain<F>(&mut self, f: F) where
-		F: FnMut(&Node<Q, T>) -> bool
+	pub fn retain<F>(&mut self, f: F)
+	where
+		F: FnMut(&Node<Q, T>) -> bool,
 	{
 		self.0.retain(f);
 	}
@@ -715,9 +722,10 @@ impl<Q, T> Nodes<Q, T> where
 	}
 }
 
-impl<Q, T> AsRef<Nodes<Q, T>> for Nodes<Q, T> where
+impl<Q, T> AsRef<Nodes<Q, T>> for Nodes<Q, T>
+where
 	Q: PartialEq + Eq + Clone,
-	T: PartialEq + Eq + Clone
+	T: PartialEq + Eq + Clone,
 {
 	/// Get a reference to the nodes list.
 	fn as_ref(&self) -> &Nodes<Q, T> {
@@ -725,9 +733,10 @@ impl<Q, T> AsRef<Nodes<Q, T>> for Nodes<Q, T> where
 	}
 }
 
-impl<Q, T> FromIterator<Node<Q, T>> for Nodes<Q, T> where
+impl<Q, T> FromIterator<Node<Q, T>> for Nodes<Q, T>
+where
 	Q: PartialEq + Eq + Clone,
-	T: PartialEq + Eq + Clone
+	T: PartialEq + Eq + Clone,
 {
 	/// Create a nodes list from an iterator.
 	fn from_iter<I: IntoIterator<Item=Node<Q, T>>>(iter: I) -> Self {
@@ -735,9 +744,10 @@ impl<Q, T> FromIterator<Node<Q, T>> for Nodes<Q, T> where
 	}
 }
 
-impl<Q, T> Iterator for Nodes<Q, T> where
+impl<Q, T> Iterator for Nodes<Q, T>
+where
 	Q: PartialEq + Eq + Clone,
-	T: PartialEq + Eq + Clone
+	T: PartialEq + Eq + Clone,
 {
 	type Item = Node<Q, T>;
 
@@ -753,9 +763,10 @@ impl<Q, T> Iterator for Nodes<Q, T> where
 	}
 }
 
-impl<Q, T> Default for Nodes<Q, T> where
+impl<Q, T> Default for Nodes<Q, T>
+where
 	Q: PartialEq + Eq + Clone,
-	T: PartialEq + Eq + Clone
+	T: PartialEq + Eq + Clone,
 {
 	/// Create an empty nodes list.
 	fn default() -> Self {
@@ -763,7 +774,11 @@ impl<Q, T> Default for Nodes<Q, T> where
 	}
 }
 
-impl<Q, T> Display for Nodes<Q, T> where Q: PartialEq + Eq + Clone + Display, T: PartialEq + Eq + Clone + Display + Default {
+impl<Q, T> Display for Nodes<Q, T>
+where
+	Q: PartialEq + Eq + Clone + Display,
+	T: PartialEq + Eq + Clone + Display + Default,
+{
 	/// Display the nodes list.
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		for node in self.iter() {
@@ -782,7 +797,7 @@ mod tests {
 		let node = Node::new(1, Some(2));
 		let child = Node::new(2, Some(3));
 		node.add_child(child);
-		assert_eq!(node.get_children().len(), 1);
+		assert_eq!(node.get_children_ids().len(), 1);
 	}
 
 	#[test]
@@ -796,8 +811,8 @@ mod tests {
 		let parent_node = Node::new(1, Some(2));
 		let child_node = Node::new(2, Some(3));
 		parent_node.add_child(child_node.clone());
-		assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
-		assert!(parent_node.get_parent().is_none());
+		assert_eq!(child_node.get_parent_id().as_ref(), Some(&parent_node.get_node_id()));
+		assert!(parent_node.get_parent_id().is_none());
 	}
 
 	#[test]
@@ -819,7 +834,7 @@ mod tests {
 		let parent_node = Node::new(1, Some(2));
 		let child_node = Node::new(2, Some(3));
 		child_node.set_parent(Some(parent_node.clone()));
-		assert_eq!(child_node.get_parent().as_ref(), Some(&parent_node.get_node_id()));
+		assert_eq!(child_node.get_parent_id().as_ref(), Some(&parent_node.get_node_id()));
 	}
 
 	#[test]
@@ -828,7 +843,7 @@ mod tests {
 		let child_node = Node::new(2, Some(3));
 		parent_node.add_child(child_node.clone());
 		parent_node.remove_child(child_node);
-		assert_eq!(parent_node.get_children().len(), 0);
+		assert_eq!(parent_node.get_children_ids().len(), 0);
 	}
 
 	#[test]
