@@ -1,11 +1,8 @@
-use std::collections::HashSet;
-use std::fmt::{Display, Error as FmtError};
-use std::hash::Hash;
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error::{InvalidOperation, NodeNotFound, RootNodeAlreadyPresent};
+use crate::lib::*;
 use crate::node::Nodes;
 use crate::prelude::{Node, Result};
 
@@ -84,7 +81,7 @@ where
 
 impl<Q, T> Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display + Hash,
+    Q: PartialEq + Eq + Clone + Display + Hash + Ord,
     T: PartialEq + Eq + Clone,
 {
     /// Create a new tree.
@@ -752,7 +749,10 @@ where
                 }
             }
         }
+        #[cfg(not(feature = "no_std"))]
         let mut seen = HashSet::new();
+        #[cfg(feature = "no_std")]
+        let mut seen = BTreeSet::new();
         nodes.retain(|x| seen.insert(x.clone()));
         Ok(nodes)
     }
@@ -763,7 +763,7 @@ where
     #[doc(hidden)]
     fn print_tree(
         tree: &Tree<Q, T>,
-        f: &mut std::fmt::Formatter<'_>,
+        f: &mut Formatter<'_>,
         node: &Node<Q, T>,
         level: usize,
         mut is_within: (bool, usize),
@@ -848,11 +848,11 @@ where
 
 impl<Q, T> Display for Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display + Hash,
+    Q: PartialEq + Eq + Clone + Display + Hash + Ord,
     T: PartialEq + Eq + Clone + Display + Default,
 {
     /// Print the tree.
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         if let Some(name) = &self.name {
             writeln!(f, "{}", name)?;
             writeln!(
@@ -862,7 +862,7 @@ where
             )?;
         }
         let node = self.get_root_node().ok_or(FmtError)?;
-        Tree::print_tree(self, f, &node, 0, (false, 0), true).map_err(|_| std::fmt::Error)?;
+        Tree::print_tree(self, f, &node, 0, (false, 0), true).map_err(|_| FmtError)?;
         Ok(())
     }
 }
@@ -881,7 +881,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::hash::{DefaultHasher, Hasher};
+    #[allow(deprecated)]
+    #[cfg(feature = "no_std")]
+    use core::hash::SipHasher as DefaultHasher;
+
+    #[cfg(not(feature = "no_std"))]
+    use std::hash::DefaultHasher;
+
+    use crate::lib::*;
 
     use super::*;
 
@@ -914,6 +921,12 @@ mod tests {
     }
 
     #[test]
+    fn test_tree_get_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        assert_eq!(tree.get_node_by_id(&1), None);
+    }
+
+    #[test]
     fn test_tree_get_nodes() {
         let mut tree = Tree::new(Some("Sample Tree"));
         let node = Node::new(1, Some(2));
@@ -941,6 +954,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_tree_get_node_height_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        tree.get_node_height(&1).unwrap();
+    }
+
+    #[test]
     fn test_tree_get_node_depth() {
         let mut tree = Tree::new(Some("Sample Tree"));
         let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
@@ -949,6 +969,13 @@ mod tests {
         assert_eq!(tree.get_node_depth(&node_3).unwrap(), 2);
         assert_eq!(tree.get_node_depth(&node_2).unwrap(), 1);
         assert_eq!(tree.get_node_depth(&node_1).unwrap(), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tree_get_node_depth_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        tree.get_node_depth(&1).unwrap();
     }
 
     #[test]
@@ -961,6 +988,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_tree_get_height_no_root_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        tree.get_height().unwrap();
+    }
+
+    #[test]
     fn test_tree_get_node_degree() {
         let mut tree = Tree::new(Some("Sample Tree"));
         let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
@@ -969,6 +1003,13 @@ mod tests {
         assert_eq!(tree.get_node_degree(&node_1).unwrap(), 2);
         assert_eq!(tree.get_node_degree(&node_2).unwrap(), 0);
         assert_eq!(tree.get_node_degree(&node_3).unwrap(), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tree_get_node_degree_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        tree.get_node_degree(&1).unwrap();
     }
 
     #[test]
@@ -989,6 +1030,23 @@ mod tests {
         tree.remove_node(&3, NodeRemovalStrategy::RemoveNodeAndChildren)?;
         assert_eq!(tree.get_nodes().len(), 1);
         Ok(())
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tree_remove_node_no_existent_node() {
+        let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
+        tree.remove_node(&1, NodeRemovalStrategy::RetainChildren)
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tree_remove_node_no_root_node() {
+        let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
+        tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        tree.remove_node(&1, NodeRemovalStrategy::RetainChildren)
+            .unwrap();
     }
 
     #[test]
@@ -1014,6 +1072,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_tree_get_subsection_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        tree.get_subtree(&1, None).unwrap();
+    }
+
+    #[test]
     fn get_siblings() {
         let mut tree = Tree::new(Some("Sample Tree"));
         let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
@@ -1027,6 +1092,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_tree_get_siblings_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        tree.get_sibling_ids(&1, false).unwrap();
+    }
+
+    #[test]
     fn test_tree_add_subsection() {
         let mut tree = Tree::new(Some("Sample Tree"));
         let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
@@ -1037,6 +1109,18 @@ mod tests {
             .unwrap();
         tree.add_subtree(&node_id, subtree).unwrap();
         assert_eq!(tree.get_nodes().len(), 3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tree_add_subsection_no_root_node() {
+        let mut tree = Tree::new(Some("Sample Tree"));
+        let mut subtree = SubTree::new(Some("Sample Tree"));
+        let node_2 = subtree.add_node(Node::new(2, Some(3)), None).unwrap();
+        subtree
+            .add_node(Node::new(3, Some(6)), Some(&node_2))
+            .unwrap();
+        tree.add_subtree(&1, subtree).unwrap();
     }
 
     #[test]
@@ -1074,6 +1158,8 @@ mod tests {
             .add_node(Node::new(5, Some(6)), Some(&node_3))
             .unwrap();
         assert_eq!(tree, tree_2);
+        let tree_3 = Tree::new(Some("Sample Tree"));
+        assert_ne!(tree, tree_3);
     }
 
     #[test]
@@ -1116,6 +1202,7 @@ mod tests {
         assert_eq!(deserialized, expected_tree);
     }
 
+    #[allow(deprecated)] // This is solely for testing hashing in no_std.
     #[test]
     fn test_hashing() {
         let mut tree = Tree::new(Some("Sample Tree"));

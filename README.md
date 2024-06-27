@@ -204,6 +204,18 @@ let nodes = tree.traverse(TraversalStrategy::PreOrder)?
     .collect::<Vec<_>>();
 ```
 
+## `no_std` Environment
+
+This crate supports `no_std` environments. To use this crate in a `no_std` environment, you need to enable the `no_std`
+feature. You can do this by adding the following to your `Cargo.toml` file:
+
+```toml
+[dependencies]
+tree-ds = { version = "0.1", features = ["no_std"] }
+```
+
+All the other features are also equally supported in the `no_std` environment.
+
 ## Roadmap
 
 - Add support for more tree operations.
