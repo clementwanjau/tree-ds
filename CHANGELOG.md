@@ -8,6 +8,8 @@
     - `Node::get_children` -> `Node::get_children_ids`
 - Clear the unwrapping landmines by returning `Result` instead of unwrapping internally which could lead to panicking in
   some cases.
+- Added support for `no_std` environments.
+- Changed the `unique_id` dependency to `sequential_gen` to generate unique ids for nodes.
 
 ## v0.1.3
 
