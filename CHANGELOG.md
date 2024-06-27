@@ -10,6 +10,9 @@
   some cases.
 - Added support for `no_std` environments.
 - Changed the `unique_id` dependency to `sequential_gen` to generate unique ids for nodes.
+- Add a way to get the ids of the ancestors of a node with the `Tree::get_ancestor_ids` method. Thanks to
+  [@PenguinWithATie](https://github.com/PenguinWithATie) for the
+  contribution.
 
 ## v0.1.3
 
