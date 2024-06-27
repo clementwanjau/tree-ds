@@ -16,12 +16,12 @@ rust-version = "1.71.0" #MRSV
 default = [] # By default, the library has no features enabled.
 async = [] # The "async" feature enables the use of the library in asynchronous contexts.
 serde = ["dep:serde"] # The "serde" feature enables serialization and deserialization of the library's types.
-auto_id = ["dep:unique_id", "dep:lazy_static"] # This feature enables the automatic generation of unique identifiers for nodes.
+auto_id = ["dep:sequential_gen", "dep:lazy_static"] # This feature enables the automatic generation of unique identifiers for nodes.
 
 [dependencies]
 serde = { version = "1.0", optional = true, features = ["derive", "rc"] }
 thiserror = "1.0.61"
-unique_id = { version = "0.1.5", optional = true }
+sequential_gen = { version = "0.1.0", optional = true }
 lazy_static = { version = "1.4.0", optional = true }
 
 [dev-dependencies]
