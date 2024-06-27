@@ -1030,7 +1030,7 @@ mod tests {
    #[should_panic]
    fn test_tree_get_node_ancestor_ids_no_existent_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_node_depth(&1).unwrap();
+        tree.get_ancestor_ids(&1).unwrap();
     }
   
    #[should_panic]
