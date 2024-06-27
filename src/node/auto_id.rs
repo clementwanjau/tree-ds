@@ -1,12 +1,11 @@
-use std::cell::RefCell;
-#[cfg(not(feature = "async"))]
-use std::rc::Rc;
-#[cfg(feature = "async")]
-use std::sync::Arc;
-
 use lazy_static::lazy_static;
 use sequential_gen::prelude::{Generator, SimpleGenerator};
 
+use crate::lib::*;
+#[cfg(feature = "async")]
+use crate::lib::Arc;
+#[cfg(not(feature = "async"))]
+use crate::lib::Rc;
 use crate::node::{_Node, Node};
 
 lazy_static! {
@@ -56,7 +55,7 @@ where
         #[cfg(feature = "async")]
         {
             Self(Arc::new(RefCell::new(_Node {
-                node_id: Q::from(GENERATOR.next_id() as i32),
+                node_id: Q::from(GENERATOR.generate() as i32),
                 value,
                 children: vec![],
                 parent: None,
@@ -67,9 +66,9 @@ where
 
 #[cfg(test)]
 mod tests {
-	use super::*;
+    use super::*;
 
-	#[cfg(not(feature = "async"))]
+    #[cfg(not(feature = "async"))]
     #[test]
     fn test_new_with_auto_id() {
         let node = Node::<i32, &str>::new_with_auto_id(Some("Harry Doe"));

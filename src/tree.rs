@@ -1,11 +1,8 @@
-use std::collections::HashSet;
-use std::fmt::{Display, Error as FmtError};
-use std::hash::Hash;
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error::{InvalidOperation, NodeNotFound, RootNodeAlreadyPresent};
+use crate::lib::*;
 use crate::node::Nodes;
 use crate::prelude::{Node, Result};
 
@@ -84,7 +81,7 @@ where
 
 impl<Q, T> Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display + Hash,
+    Q: PartialEq + Eq + Clone + Display + Hash + Ord,
     T: PartialEq + Eq + Clone,
 {
     /// Create a new tree.
@@ -752,7 +749,10 @@ where
                 }
             }
         }
+        #[cfg(not(feature = "no_std"))]
         let mut seen = HashSet::new();
+        #[cfg(feature = "no_std")]
+        let mut seen = BTreeSet::new();
         nodes.retain(|x| seen.insert(x.clone()));
         Ok(nodes)
     }
@@ -763,7 +763,7 @@ where
     #[doc(hidden)]
     fn print_tree(
         tree: &Tree<Q, T>,
-        f: &mut std::fmt::Formatter<'_>,
+        f: &mut Formatter<'_>,
         node: &Node<Q, T>,
         level: usize,
         mut is_within: (bool, usize),
@@ -848,11 +848,11 @@ where
 
 impl<Q, T> Display for Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display + Hash,
+    Q: PartialEq + Eq + Clone + Display + Hash + Ord,
     T: PartialEq + Eq + Clone + Display + Default,
 {
     /// Print the tree.
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         if let Some(name) = &self.name {
             writeln!(f, "{}", name)?;
             writeln!(
@@ -862,7 +862,7 @@ where
             )?;
         }
         let node = self.get_root_node().ok_or(FmtError)?;
-        Tree::print_tree(self, f, &node, 0, (false, 0), true).map_err(|_| std::fmt::Error)?;
+        Tree::print_tree(self, f, &node, 0, (false, 0), true).map_err(|_| FmtError)?;
         Ok(())
     }
 }
@@ -881,7 +881,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::hash::{DefaultHasher, Hasher};
+    #[allow(deprecated)]
+    #[cfg(feature = "no_std")]
+    use core::hash::SipHasher as DefaultHasher;
+
+    #[cfg(not(feature = "no_std"))]
+    use std::hash::DefaultHasher;
+
+    use crate::lib::*;
 
     use super::*;
 
@@ -1116,6 +1123,7 @@ mod tests {
         assert_eq!(deserialized, expected_tree);
     }
 
+    #[allow(deprecated)] // This is solely for testing hashing in no_std.
     #[test]
     fn test_hashing() {
         let mut tree = Tree::new(Some("Sample Tree"));
