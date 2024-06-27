@@ -1,5 +1,6 @@
 //! # Tree-DS
-//! A simple tree data structure implementation in Rust.
+//! A simple tree data structure implementation in Rust. It can be used in both `std` and `no_std`
+//! environments.
 //!
 //! The tree data structure is a hierarchical data structure that consists of nodes connected by
 //! edges. Each node in the tree can have zero or more children nodes. The tree data structure
@@ -103,8 +104,17 @@
 //!        └── Node 4: 6
 //! ```
 //!
+//! ## `no_std` Environments.
+//! This crate can be used in `no_std` environments by enabling the `no_std` feature.
+//!
+//! ```toml
+//! [dependencies]
+//! tree-ds = { version = "0.1", features = ["no_std"] }
+//! ```
+//!
 //! ## Cargo Features
-//! - `default`: By default the library is synchronous, and you need to provide ids for the nodes.
+//! The following cargo features are also available:
+//! - By default the library is synchronous, and you need to manually provide ids for the nodes.
 //! - `async`: Enables support for async operations on the tree.
 //! - `serde`: Enables serialization and deserialization of the tree.
 //! - `auto_id`: Enables auto-generation of node IDs.
