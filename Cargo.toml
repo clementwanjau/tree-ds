@@ -1,7 +1,7 @@
 [package]
 name = "tree-ds"
 description = "A library to manipulate tree data structures."
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 authors = ["Clement Wanjau <clementwanjau@gmail.com>"]
 repository = "https://github.com/clementwanjau/tree-ds"
