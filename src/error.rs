@@ -5,7 +5,7 @@ use crate::lib::*;
 
 /// The error type for this crate.
 #[cfg_attr(not(feature = "no_std"), derive(Error))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Error {
     /// The root node is already present in the tree.
     #[cfg_attr(
