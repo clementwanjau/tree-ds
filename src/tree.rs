@@ -1312,6 +1312,37 @@ mod tests {
         assert_eq!(deserialized, expected_tree);
     }
 
+    #[cfg(all(feature = "auto_id", feature = "serde"))]
+    #[test]
+    fn test_tree_serialize_and_deserialize_with_auto_id_ensuring_uniqueness() {
+        let mut tree = Tree::<i32, i32>::new(Some("Sample Tree"));
+        let root = tree
+            .add_node(Node::new_with_auto_id(Some(2)), None)
+            .unwrap();
+        let child_1 = tree
+            .add_node(Node::new_with_auto_id(Some(3)), Some(&root))
+            .unwrap();
+        let child_2 = tree
+            .add_node(Node::new_with_auto_id(Some(4)), Some(&child_1))
+            .unwrap();
+        let child_3 = tree
+            .add_node(Node::new_with_auto_id(Some(5)), Some(&child_2))
+            .unwrap();
+        let serialized_tree = serde_json::to_string(&tree).unwrap();
+        let mut deserialized_tree: Tree<i32, i32> = serde_json::from_str(&serialized_tree).unwrap();
+        deserialized_tree
+            .add_node(Node::new_with_auto_id(Some(6)), Some(&child_3))
+            .unwrap();
+        let mut node_ids = deserialized_tree
+            .get_nodes()
+            .iter()
+            .map(|node| node.get_node_id())
+            .collect::<Vec<_>>();
+        node_ids.sort();
+        node_ids.dedup();
+        assert_eq!(node_ids.len(), deserialized_tree.get_nodes().len());
+    }
+
     #[allow(deprecated)] // This is solely for testing hashing in no_std.
     #[test]
     fn test_hashing() {
