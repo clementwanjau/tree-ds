@@ -80,7 +80,7 @@
 //! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1))?;
 //! let child_3 = tree.add_node(Node::new("Node 4", Some(5)), Some(&child_2))?;
 //!
-//! tree.traverse(TraversalStrategy::PreOrder, &root)?
+//! tree.traverse(&root, TraversalStrategy::PreOrder)?
 //!   .iter()
 //!   .for_each(|node_id| {
 //!     let node = tree.get_node_by_id(node_id).unwrap();

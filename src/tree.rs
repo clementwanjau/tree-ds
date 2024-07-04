@@ -754,13 +754,13 @@ where
     /// let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1))?;
     /// let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2))?;
     ///
-    /// let ordered_nodes = tree.traverse(TraversalStrategy::PreOrder, &node_1)?;
+    /// let ordered_nodes = tree.traverse(&node_1, TraversalStrategy::PreOrder)?;
     /// # let expected = vec![1, 2, 3];
     /// # assert_eq!(ordered_nodes, expected);
     /// # Ok(())
     /// # }
     /// ```
-    pub fn traverse(&self, order: TraversalStrategy, node_id: &Q) -> Result<Vec<Q>> {
+    pub fn traverse(&self, node_id: &Q, order: TraversalStrategy) -> Result<Vec<Q>> {
         let mut nodes = vec![];
         let node = self
             .get_node_by_id(node_id)
@@ -769,19 +769,19 @@ where
             TraversalStrategy::PreOrder => {
                 nodes.push(node_id.clone());
                 for child_id in node.get_children_ids().iter() {
-                    nodes.append(&mut self.traverse(order, child_id)?);
+                    nodes.append(&mut self.traverse(child_id, order)?);
                 }
             }
             TraversalStrategy::PostOrder => {
                 for child_id in node.get_children_ids().iter() {
-                    nodes.append(&mut self.traverse(order, child_id)?);
+                    nodes.append(&mut self.traverse(child_id, order)?);
                 }
                 nodes.push(node_id.clone());
             }
             TraversalStrategy::InOrder => {
                 for (index, child_id) in node.get_children_ids().iter().enumerate() {
                     if index == 0 {
-                        nodes.append(&mut self.traverse(order, child_id)?);
+                        nodes.append(&mut self.traverse(child_id, order)?);
                         if !nodes.contains(child_id) {
                             nodes.push(child_id.clone());
                         }
@@ -790,7 +790,7 @@ where
                         }
                     } else {
                         nodes.push(child_id.clone());
-                        nodes.append(&mut self.traverse(order, child_id)?);
+                        nodes.append(&mut self.traverse(child_id, order)?);
                     }
                 }
             }
@@ -1281,16 +1281,16 @@ mod tests {
         let node_4 = tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
         let node_5 = tree.add_node(Node::new(5, Some(6)), Some(&node_2)).unwrap();
         let node_6 = tree.add_node(Node::new(6, Some(7)), Some(&node_3)).unwrap();
-        let preorder_nodes = tree.traverse(TraversalStrategy::PreOrder, &node_1).unwrap();
+        let preorder_nodes = tree.traverse(&node_1, TraversalStrategy::PreOrder).unwrap();
         let expected_preorder = vec![node_1, node_2, node_4, node_5, node_3, node_6];
         assert_eq!(preorder_nodes, expected_preorder);
 
-        let in_order_nodes = tree.traverse(TraversalStrategy::InOrder, &node_1).unwrap();
+        let in_order_nodes = tree.traverse(&node_1, TraversalStrategy::InOrder).unwrap();
         let expected_in_order = vec![node_4, node_2, node_5, node_1, node_3, node_6];
         assert_eq!(in_order_nodes, expected_in_order);
 
         let post_order_nodes = tree
-            .traverse(TraversalStrategy::PostOrder, &node_1)
+            .traverse(&node_1, TraversalStrategy::PostOrder)
             .unwrap();
         let expected_post_order = vec![node_4, node_5, node_2, node_6, node_3, node_1];
         assert_eq!(post_order_nodes, expected_post_order);

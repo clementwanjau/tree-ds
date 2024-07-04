@@ -195,7 +195,7 @@ fn test_tree() -> Result<()> {
     // endregion
 
     // region: -- Traversal
-    let traversal = tree.traverse(TraversalStrategy::PreOrder, &finance_manager_node)?;
+    let traversal = tree.traverse(&finance_manager_node, TraversalStrategy::PreOrder)?;
     traversal.iter().for_each(|node_id| {
         let node = tree.get_node_by_id(node_id).unwrap();
         node.set_value(None);
