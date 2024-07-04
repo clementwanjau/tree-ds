@@ -176,15 +176,15 @@ fn main() -> Result<()> {
 	let node_4 = tree.add_node(Node::new(4, Some(5)), Some(&node_2))?;
 	let node_5 = tree.add_node(Node::new(5, Some(6)), Some(&node_2))?;
 	let node_6 = tree.add_node(Node::new(6, Some(7)), Some(&node_3))?;
-	let preorder_nodes = tree.traverse(TraversalStrategy::PreOrder, &node_1)?;
+	let preorder_nodes = tree.traverse(&node_1, TraversalStrategy::PreOrder)?;
 	let expected_preorder = vec![node_1, node_2, node_4, node_5, node_3, node_6];
 	assert_eq!(preorder_nodes, expected_preorder);
 
-	let in_order_nodes = tree.traverse(TraversalStrategy::InOrder, &node_1)?;
+	let in_order_nodes = tree.traverse(&node_1, TraversalStrategy::InOrder)?;
 	let expected_in_order = vec![node_4, node_2, node_5, node_1, node_3, node_6];
 	assert_eq!(in_order_nodes, expected_in_order);
 
-	let post_order_nodes = tree.traverse(TraversalStrategy::PostOrder, &node_1)?;
+	let post_order_nodes = tree.traverse(&node_1, TraversalStrategy::PostOrder)?;
 	let expected_post_order = vec![node_4, node_5, node_2, node_6, node_3, node_1];
 	assert_eq!(post_order_nodes, expected_post_order);
 	Ok(())
@@ -195,7 +195,7 @@ You can also perform an action on the nodes while traversing the tree on the ite
 The following example shows how to traverse the tree in a pre-order fashion and perform an action on the nodes:
 
 ```rust,ignore
-let nodes = tree.traverse(TraversalStrategy::PreOrder)?
+let nodes = tree.traverse(&node_id, TraversalStrategy::PreOrder)?
     .iter()
     .map(|node| {
         println!("{}", node);
