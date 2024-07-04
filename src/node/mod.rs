@@ -790,7 +790,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_node() {
+    fn test_node_new() {
+        let node = Node::new(1, Some(2));
+        assert_eq!(node.get_node_id(), 1);
+        assert_eq!(node.get_value(), Some(2));
+        assert_eq!(node.get_children_ids().len(), 0);
+        assert!(node.get_parent_id().is_none());
+    }
+
+    #[test]
+    fn test_node_adding_children() {
         let node = Node::new(1, Some(2));
         let child = Node::new(2, Some(3));
         node.add_child(child);
