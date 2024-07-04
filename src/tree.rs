@@ -1,4 +1,3 @@
-use std::collections::BTreeSet;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -140,9 +139,12 @@ where
     /// ```
     pub fn add_node(&mut self, node: Node<Q, T>, parent_id: Option<&Q>) -> Result<Q> {
         if let Some(parent_id) = parent_id {
-            if let Some(parent) = self.nodes.iter().find(|n| &n.get_node_id() == parent_id) {
-                parent.add_child(node.clone());
-            }
+            let parent = self
+                .nodes
+                .iter()
+                .find(|n| &n.get_node_id() == parent_id)
+                .ok_or(NodeNotFound(parent_id.to_string()))?;
+            parent.add_child(node.clone());
         } else if self.get_root_node().is_some() {
             return Err(RootNodeAlreadyPresent);
         }
@@ -928,6 +930,7 @@ mod tests {
     #[allow(deprecated)]
     #[cfg(feature = "no_std")]
     use core::hash::SipHasher as DefaultHasher;
+
     #[cfg(not(feature = "no_std"))]
     use std::hash::DefaultHasher;
 
@@ -952,6 +955,19 @@ mod tests {
         assert_eq!(node_id_2, 2);
         let node_2 = tree.get_node_by_id(&2).unwrap();
         assert_eq!(node_2.get_parent_id().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_tree_add_more_than_one_root_node() {
+        let mut tree = Tree::new(Some("Sample Tree"));
+        let result = tree.add_node(Node::new(1, Some(2)), None);
+        assert!(result.is_ok());
+        let node_id = result.unwrap();
+        assert_eq!(tree.nodes.len(), 1);
+        assert_eq!(node_id, 1);
+        let result = tree.add_node(Node::new(2, Some(3)), None);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), RootNodeAlreadyPresent);
     }
 
     #[test]
@@ -1206,9 +1222,9 @@ mod tests {
         let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
         let mut subtree = SubTree::new(Some("Sample Tree"));
         let node_2 = Node::new(2, Some(3));
-        let _ = subtree
-            .add_node(Node::new(3, Some(3)), Some(&node_2.get_node_id()))
-            .unwrap();
+        let result = subtree.add_node(Node::new(3, Some(3)), Some(&node_2.get_node_id()));
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("2".to_string()));
         let result = tree.add_subtree(&node_id, subtree);
         assert!(result.is_err());
         assert_eq!(
