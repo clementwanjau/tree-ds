@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.5
+
+- Changed the signature of the `Tree::traverse(&self, order: TraversalStrategy, node_id: &Q) -> Result<Vec<Q>>` method
+  to `Tree::traverse(&self, node_id: &Q, order: TraversalStrategy) -> Result<Vec<Q>>` to conform to the project method
+  signature convention.
+- Added more bug fixes and tests.
+
 ## v0.1.4
 
 - Bug fixes.
