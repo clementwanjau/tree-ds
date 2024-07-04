@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -927,7 +928,6 @@ mod tests {
     #[allow(deprecated)]
     #[cfg(feature = "no_std")]
     use core::hash::SipHasher as DefaultHasher;
-
     #[cfg(not(feature = "no_std"))]
     use std::hash::DefaultHasher;
 
@@ -997,10 +997,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_get_node_height_no_existent_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_node_height(&1).unwrap();
+        let result = tree.get_node_height(&1);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
     }
 
     #[test]
@@ -1021,23 +1022,27 @@ mod tests {
         let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
         let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
         let node_4 = tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
-        assert_eq!(tree.get_ancestor_ids(&node_4).unwrap(), vec![2,1]);
-        assert_eq!(tree.get_ancestor_ids(&node_3).unwrap(), vec![2,1]);
+        assert_eq!(tree.get_ancestor_ids(&node_4).unwrap(), vec![2, 1]);
+        assert_eq!(tree.get_ancestor_ids(&node_3).unwrap(), vec![2, 1]);
         assert_eq!(tree.get_ancestor_ids(&node_2).unwrap(), vec![1]);
         assert_eq!(tree.get_ancestor_ids(&node_1).unwrap(), Vec::<i32>::new());
-   }
-  
-   #[should_panic]
-   fn test_tree_get_node_ancestor_ids_no_existent_node() {
-        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_ancestor_ids(&1).unwrap();
     }
-  
-   #[should_panic]
-   fn test_tree_get_node_depth_no_existent_node() {
+
+    #[test]
+    fn test_tree_get_node_ancestor_ids_no_existent_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_node_depth(&1).unwrap();
-   }
+        let result = tree.get_ancestor_ids(&1);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
+    }
+
+    #[test]
+    fn test_tree_get_node_depth_no_existent_node() {
+        let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
+        let result = tree.get_node_depth(&1);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
+    }
 
     #[test]
     fn test_tree_get_height() {
@@ -1049,10 +1054,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_get_height_no_root_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_height().unwrap();
+        let result = tree.get_height();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            InvalidOperation("Tree has no root node".to_string())
+        );
     }
 
     #[test]
@@ -1067,10 +1076,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_get_node_degree_no_existent_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_node_degree(&1).unwrap();
+        let result = tree.get_node_degree(&1);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
     }
 
     #[test]
@@ -1094,20 +1104,23 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_remove_node_no_existent_node() {
         let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
-        tree.remove_node(&1, NodeRemovalStrategy::RetainChildren)
-            .unwrap();
+        let result = tree.remove_node(&1, NodeRemovalStrategy::RetainChildren);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_remove_node_no_root_node() {
         let mut tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
         tree.add_node(Node::new(1, Some(2)), None).unwrap();
-        tree.remove_node(&1, NodeRemovalStrategy::RetainChildren)
-            .unwrap();
+        let result = tree.remove_node(&1, NodeRemovalStrategy::RetainChildren);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            InvalidOperation("Cannot remove root node with RetainChildren strategy".to_string())
+        );
     }
 
     #[test]
@@ -1133,10 +1146,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_get_subsection_no_existent_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_subtree(&1, None).unwrap();
+        let result = tree.get_subtree(&1, None);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
     }
 
     #[test]
@@ -1153,10 +1167,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_tree_get_siblings_no_existent_node() {
         let tree = Tree::<u32, u32>::new(Some("Sample Tree"));
-        tree.get_sibling_ids(&1, false).unwrap();
+        let result = tree.get_sibling_ids(&1, false);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
     }
 
     #[test]
@@ -1173,15 +1188,33 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_tree_add_subsection_no_root_node() {
+    fn test_tree_add_subsection_no_attaching_node() {
         let mut tree = Tree::new(Some("Sample Tree"));
         let mut subtree = SubTree::new(Some("Sample Tree"));
         let node_2 = subtree.add_node(Node::new(2, Some(3)), None).unwrap();
         subtree
             .add_node(Node::new(3, Some(6)), Some(&node_2))
             .unwrap();
-        tree.add_subtree(&1, subtree).unwrap();
+        let result = tree.add_subtree(&1, subtree);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), NodeNotFound("1".to_string()));
+    }
+
+    #[test]
+    fn test_tree_add_subsection_with_no_root_node() {
+        let mut tree = Tree::new(Some("Sample Tree"));
+        let node_id = tree.add_node(Node::new(1, Some(2)), None).unwrap();
+        let mut subtree = SubTree::new(Some("Sample Tree"));
+        let node_2 = Node::new(2, Some(3));
+        let _ = subtree
+            .add_node(Node::new(3, Some(3)), Some(&node_2.get_node_id()))
+            .unwrap();
+        let result = tree.add_subtree(&node_id, subtree);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            InvalidOperation("Subtree has no root node.".to_string())
+        );
     }
 
     #[test]
