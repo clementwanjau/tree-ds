@@ -177,7 +177,7 @@ mod lib {
 
 mod error;
 mod node;
-#[cfg(all(test, feature = "no_std"))]
+#[cfg(feature = "no_std")]
 mod print;
 mod tree;
 
