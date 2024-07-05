@@ -3,8 +3,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error::{InvalidOperation, NodeNotFound, RootNodeAlreadyPresent};
 use crate::lib::*;
+#[cfg(feature = "no_std")]
+use crate::lib::BTreeSet;
 use crate::node::Nodes;
 use crate::prelude::{Node, Result};
+
+/// Defines the default type for the node id.
+///
+/// The default type for the node id is `u128`.
+pub type AutomatedId = u128;
 
 /// The strategy to use when removing a node from the tree.
 ///
@@ -931,6 +938,8 @@ mod tests {
     #[cfg(feature = "no_std")]
     use core::hash::SipHasher as DefaultHasher;
 
+    use serde_json::json;
+
     #[cfg(not(feature = "no_std"))]
     use std::hash::DefaultHasher;
 
@@ -1315,7 +1324,7 @@ mod tests {
     #[cfg(all(feature = "auto_id", feature = "serde"))]
     #[test]
     fn test_tree_serialize_and_deserialize_with_auto_id_ensuring_uniqueness() {
-        let mut tree = Tree::<i32, i32>::new(Some("Sample Tree"));
+        let mut tree = Tree::<AutomatedId, i32>::new(Some("Sample Tree"));
         let root = tree
             .add_node(Node::new_with_auto_id(Some(2)), None)
             .unwrap();
@@ -1329,9 +1338,30 @@ mod tests {
             .add_node(Node::new_with_auto_id(Some(5)), Some(&child_2))
             .unwrap();
         let serialized_tree = serde_json::to_string(&tree).unwrap();
-        let mut deserialized_tree: Tree<i32, i32> = serde_json::from_str(&serialized_tree).unwrap();
+        let mut deserialized_tree: Tree<AutomatedId, i32> =
+            serde_json::from_str(&serialized_tree).unwrap();
         deserialized_tree
             .add_node(Node::new_with_auto_id(Some(6)), Some(&child_3))
+            .unwrap();
+        let mut node_ids = deserialized_tree
+            .get_nodes()
+            .iter()
+            .map(|node| node.get_node_id())
+            .collect::<Vec<_>>();
+        node_ids.sort();
+        node_ids.dedup();
+        assert_eq!(node_ids.len(), deserialized_tree.get_nodes().len());
+    }
+
+    #[cfg(all(feature = "auto_id", feature = "serde"))]
+    #[test]
+    #[cfg_attr(feature = "no_std", ignore)]
+    fn test_tree_deserialize_from_disk_with_auto_id_ensuring_uniqueness() {
+        let tree_str = json!({"name":"Sample Tree","nodes":[{"node_id":3,"value":2,"children":[4],"parent":null},{"node_id":4,"value":3,"children":[5],"parent":3},{"node_id":5,"value":4,"children":[6],"parent":4},{"node_id":6,"value":5,"children":[],"parent":5}]});
+        let mut deserialized_tree =
+            serde_json::from_value::<Tree<AutomatedId, i32>>(tree_str).unwrap();
+        deserialized_tree
+            .add_node(Node::new_with_auto_id(Some(6)), Some(&6))
             .unwrap();
         let mut node_ids = deserialized_tree
             .get_nodes()
