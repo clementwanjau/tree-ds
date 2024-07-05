@@ -139,7 +139,6 @@ mod lib {
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
-
     #[cfg(not(feature = "no_std"))]
     pub use std::{
         collections::HashSet,
@@ -169,7 +168,6 @@ mod lib {
     mod core {
         #[cfg(feature = "no_std")]
         pub use core::*;
-
         #[cfg(not(feature = "no_std"))]
         pub use std::*;
     }
@@ -186,7 +184,7 @@ pub mod prelude {
 
     pub use crate::{
         node::{Node, Nodes},
-        tree::{NodeRemovalStrategy, SubTree, TraversalStrategy, Tree},
+        tree::{AutomatedId, NodeRemovalStrategy, SubTree, TraversalStrategy, Tree},
     };
 
     /// The error type for this crate.
