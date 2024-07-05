@@ -71,9 +71,14 @@ Then you can create a node as follows:
 ```rust,ignore
 use tree_ds::prelude::*;
 
-// Not that in this case, the `Q` type parameter should be of type `i32` or any other type that implements the `From<i32>` trait.
-let node: Node<i32, &str> = Node::new_with_auto_id(Some("Some Node Value"));
+// Not that in this case, the `Q` type parameter should be of type `AutomatedId` or any other type that implements the `From<u128>` trait.
+let node: Node<AutomatedId, &str> = Node::new_with_auto_id(Some("Some Node Value"));
 ```
+
+> **Note:** The node id generated in the `no_std` environment may not be unique across serializations and
+> deserializations and disk persistence. This is because the `no_std` environment does not have access to
+> the `std::time` module to generate unique ids. Instead it uses the
+> `SimpleGenerator` from the `sequential_gen` crate to generate unique ids.
 
 ### Trees
 

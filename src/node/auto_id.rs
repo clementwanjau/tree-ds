@@ -30,7 +30,7 @@ where
     ///
     /// The ID is generated using a sequence generator, meaning that the ID is sequential and unique.
     /// This is useful when you want to create a node without specifying the ID. For a node to be
-    /// created with an auto-generated ID, the `Q` type must implement the `From<i32>` trait.
+    /// created with an auto-generated ID, the `Q` type must be of type `AutomatedId`.
     ///
     /// # Arguments
     ///
@@ -64,7 +64,7 @@ where
         #[cfg(feature = "async")]
         {
             Self(Arc::new(RefCell::new(_Node {
-                node_id: Q::from(GENERATOR.generate()),
+                node_id: Q::from(GENERATOR.generate() as u128),
                 value,
                 children: vec![],
                 parent: None,
