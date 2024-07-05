@@ -181,8 +181,6 @@ mod lib {
 
 mod error;
 mod node;
-#[cfg(feature = "no_std")]
-mod print;
 mod tree;
 
 pub mod prelude {
