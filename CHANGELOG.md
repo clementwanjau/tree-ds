@@ -6,6 +6,7 @@
   to `Tree::traverse(&self, node_id: &Q, order: TraversalStrategy) -> Result<Vec<Q>>` to conform to the project method
   signature convention.
 - Added more bug fixes and tests.
+- The auto id feature now depends on epoch based id generation to generate unique ids for nodes.
 
 ## v0.1.4
 
