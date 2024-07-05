@@ -1,8 +1,3 @@
-use std::fmt::Display;
-use std::str::Utf8Error;
-
-use serde::{Deserialize, Serialize};
-
 use tree_ds::prelude::*;
 
 #[test]
@@ -225,7 +220,13 @@ fn test_tree() -> Result<()> {
 #[cfg(feature = "auto_id")]
 #[test]
 fn test_tree_with_auto_id() -> Result<()> {
-    #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
+    #[cfg(feature = "serde")]
+    use serde::{Deserialize, Serialize};
+    use std::fmt::Display;
+    use std::str::Utf8Error;
+
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Clone, Debug, Eq, PartialEq, Hash)]
     pub struct Position {
         pub title: String,
         pub salary: u32,
@@ -536,7 +537,6 @@ fn test_tree_with_auto_id() -> Result<()> {
             Some(&marketing_team_member.get_node_id()),
         )?;
         assert_eq!(initial_nodes.len() + 1, deserialized_tree.get_nodes().len());
-        println!("{}", deserialized_tree);
     }
     // endregion
 

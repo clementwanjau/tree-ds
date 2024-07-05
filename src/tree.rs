@@ -938,6 +938,7 @@ mod tests {
     #[cfg(feature = "no_std")]
     use core::hash::SipHasher as DefaultHasher;
 
+    #[cfg(feature = "serde")]
     use serde_json::json;
 
     #[cfg(not(feature = "no_std"))]

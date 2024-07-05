@@ -886,7 +886,7 @@ mod tests {
         assert_eq!(format!("{}", node), "2");
     }
 
-    #[cfg_attr(not(feature = "serde"), ignore)]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_node_serialize() {
         let node = Node::new(1, Some(2));
