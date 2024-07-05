@@ -222,8 +222,8 @@ fn test_tree() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "auto_id")]
 #[test]
-#[cfg_attr(not(feature = "auto_id"), ignore)]
 fn test_tree_with_auto_id() -> Result<()> {
     #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
     pub struct Position {
