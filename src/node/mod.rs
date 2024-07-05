@@ -333,12 +333,19 @@ where
 {
     /// Display the node.
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(
+        #[cfg(feature = "print_node_id")]
+        return write!(
             f,
             "{}: {}",
             self.get_node_id(),
             self.get_value().as_ref().cloned().unwrap_or_default()
-        )
+        );
+        #[cfg(not(feature = "print_node_id"))]
+        return write!(
+            f,
+            "{}",
+            self.get_value().as_ref().cloned().unwrap_or_default()
+        );
     }
 }
 

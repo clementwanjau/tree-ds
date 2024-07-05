@@ -119,6 +119,7 @@
 //! - `serde`: Enables serialization and deserialization of the tree.
 //! - `auto_id`: Enables auto-generation of node IDs.
 //! - `no_std`: Disables the standard library.
+//! - `print_node_id`: Enables printing the node ID when printing the tree. It is disabled by default.
 
 #![cfg_attr(feature = "no_std", no_std)]
 
@@ -139,6 +140,7 @@ mod lib {
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
+
     #[cfg(not(feature = "no_std"))]
     pub use std::{
         collections::HashSet,
@@ -168,6 +170,7 @@ mod lib {
     mod core {
         #[cfg(feature = "no_std")]
         pub use core::*;
+
         #[cfg(not(feature = "no_std"))]
         pub use std::*;
     }
