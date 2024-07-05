@@ -7,6 +7,7 @@
   signature convention.
 - Added more bug fixes and tests.
 - The auto id feature now depends on epoch based id generation to generate unique ids for nodes.
+- Added a `print_node_id` feature to enable printing of node ids in the tree visualization. It is disabled by default.
 
 ## v0.1.4
 
