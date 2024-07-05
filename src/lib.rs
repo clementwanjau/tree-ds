@@ -88,7 +88,10 @@
 //!     node.set_value(Some(cur_value + 1));
 //! });
 //!
+//! # #[cfg(feature = "print_node_id")]
 //! # assert_eq!("Sample Tree\n***********\nNode 1: 3\n└── Node 2: 4\n    └── Node 3: 5\n        └── Node 4: 6\n", tree.to_string());
+//! # #[cfg(not(feature = "print_node_id"))]
+//! # assert_eq!("Sample Tree\n***********\n3\n└── 4\n    └── 5\n        └── 6\n", tree.to_string());
 //! # assert_eq!(tree.get_node_by_id(&root).unwrap().get_value().unwrap(), 3);
 //! # Ok(())
 //! # }

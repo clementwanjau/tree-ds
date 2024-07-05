@@ -873,12 +873,20 @@ mod tests {
     }
 
     #[test]
-    fn test_node_display() {
+    #[cfg_attr(not(feature = "print_node_id"), ignore)]
+    fn test_node_display_with_id() {
         let node = Node::new(1, Some(2));
         assert_eq!(format!("{}", node), "1: 2");
     }
 
-    #[cfg(feature = "serde")]
+    #[test]
+    #[cfg_attr(feature = "print_node_id", ignore)]
+    fn test_node_display_without_id() {
+        let node = Node::new(1, Some(2));
+        assert_eq!(format!("{}", node), "2");
+    }
+
+    #[cfg_attr(not(feature = "serde"), ignore)]
     #[test]
     fn test_node_serialize() {
         let node = Node::new(1, Some(2));
@@ -1023,7 +1031,10 @@ mod tests {
     #[test]
     fn test_nodes_display() {
         let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
+        #[cfg(feature = "print_node_id")]
         assert_eq!(format!("{}", nodes), "1: 2");
+        #[cfg(not(feature = "print_node_id"))]
+        assert_eq!(format!("{}", nodes), "2");
     }
 
     #[cfg(feature = "serde")]

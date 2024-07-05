@@ -1250,7 +1250,12 @@ mod tests {
         let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
         tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
         tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
+        #[cfg(feature = "print_node_id")]
         let expected_str = "Sample Tree\n***********\n1: 2\n└── 2: 3\n    ├── 3: 6\n    │   └── 5: 6\n    └── 4: 5\n";
+        #[cfg(not(feature = "print_node_id"))]
+        let expected_str =
+            "Sample Tree\n***********\n2\n└── 3\n    ├── 6\n    │   └── 6\n    └── 5\n";
+
         assert_eq!(tree.to_string(), expected_str);
     }
 

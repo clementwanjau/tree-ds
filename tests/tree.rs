@@ -536,6 +536,7 @@ fn test_tree_with_auto_id() -> Result<()> {
             Some(&marketing_team_member.get_node_id()),
         )?;
         assert_eq!(initial_nodes.len() + 1, deserialized_tree.get_nodes().len());
+        println!("{}", deserialized_tree);
     }
     // endregion
 
