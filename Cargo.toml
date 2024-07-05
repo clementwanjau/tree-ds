@@ -23,7 +23,7 @@ no_std = ["sequential_gen/no_std", "lazy_static/spin_no_std", "serde/alloc"] # T
 [dependencies]
 serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
 thiserror = "1.0.61"
-sequential_gen = { version = "0.1.0", default-features = false }
+sequential_gen = { version = "0.1.1", default-features = false }
 lazy_static = { version = "1.4.0" }
 
 [dev-dependencies]
