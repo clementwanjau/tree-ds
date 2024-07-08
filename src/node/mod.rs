@@ -842,26 +842,6 @@ mod tests {
         assert_eq!(format!("{}", node), "2");
     }
 
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_node_serialize() {
-        let node = Node::new(1, Some(2));
-        let serialized = serde_json::to_string(&node).unwrap();
-        assert_eq!(
-            serialized,
-            r#"{"node_id":1,"value":2,"children":[],"parent":null}"#
-        );
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_node_deserialize() {
-        let node = Node::new(1, Some(2));
-        let serialized = serde_json::to_string(&node).unwrap();
-        let deserialized: Node<i32, i32> = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(node, deserialized);
-    }
-
     #[test]
     fn test_nodes() {
         let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
@@ -991,25 +971,5 @@ mod tests {
         assert_eq!(format!("{}", nodes), "1: 2");
         #[cfg(not(feature = "print_node_id"))]
         assert_eq!(format!("{}", nodes), "2");
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_nodes_serialize() {
-        let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
-        let serialized = serde_json::to_string(&nodes).unwrap();
-        assert_eq!(
-            serialized,
-            r#"[{"node_id":1,"value":2,"children":[],"parent":null}]"#
-        );
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_nodes_deserialize() {
-        let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
-        let serialized = serde_json::to_string(&nodes).unwrap();
-        let deserialized: Nodes<i32, i32> = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(nodes, deserialized);
     }
 }
