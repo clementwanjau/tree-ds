@@ -76,6 +76,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "compact_serde"), ignore)]
     fn test_tree_compact_serialize() {
         let mut tree = Tree::new(None);
         let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
@@ -89,6 +90,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "compact_serde"), ignore)]
     fn test_tree_compact_deserialize() {
         let tree_str = r#"{"nodes":[{"node_id":1,"value":2,"parent":null},{"node_id":2,"value":3,"parent":1},{"node_id":3,"value":6,"parent":2},{"node_id":4,"value":5,"parent":2},{"node_id":5,"value":6,"parent":3}]}"#;
         let deserialized: Tree<u32, u32> = serde_json::from_str(tree_str).unwrap();
