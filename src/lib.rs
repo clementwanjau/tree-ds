@@ -143,7 +143,6 @@ mod lib {
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
-
     #[cfg(not(feature = "no_std"))]
     pub use std::{
         collections::HashSet,
@@ -168,12 +167,10 @@ mod lib {
     pub use self::core::option::Option;
     pub use self::core::result::Result;
     pub use self::core::slice::Iter;
-    pub use self::core::usize;
 
     mod core {
         #[cfg(feature = "no_std")]
         pub use core::*;
-
         #[cfg(not(feature = "no_std"))]
         pub use std::*;
     }
