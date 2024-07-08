@@ -5,11 +5,56 @@ on:
   pull_request:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-    runs-on: ${{ matrix.os }}
+  build-on-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Cache                                                             # Cache the dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/debug/deps/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      - name: Cargo Hack Check
+        run: cargo hack check --feature-powerset --mutually-exclusive-features no_std,default --lib --tests --examples
+      - name: Cargo Hack Test
+        run: cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
+
+  build-on-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Cache                                                             # Cache the dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/debug/deps/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      - name: Cargo Hack Check
+        run: cargo hack check --feature-powerset --mutually-exclusive-features no_std,default --lib --tests --examples
+      - name: Cargo Hack Test
+        run: cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
+
+  build-on-linux:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
