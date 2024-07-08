@@ -151,16 +151,14 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg_attr(feature = "compact_serde", ignore)]
     fn test_node_serialize() {
         let node = Node::new(1, Some(2));
         let serialized = serde_json::to_string(&node).unwrap();
-        #[cfg(not(feature = "compact_serde"))]
         assert_eq!(
             serialized,
             r#"{"node_id":1,"value":2,"children":[],"parent":null}"#
         );
-        #[cfg(feature = "compact_serde")]
-        assert_eq!(serialized, r#"{"node_id":1,"value":2,"parent":null}"#);
     }
 
     #[test]
@@ -172,16 +170,38 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(feature = "compact_serde", ignore)]
     fn test_nodes_serialize() {
         let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
         let serialized = serde_json::to_string(&nodes).unwrap();
-        #[cfg(not(feature = "compact_serde"))]
         assert_eq!(
             serialized,
             r#"[{"node_id":1,"value":2,"children":[],"parent":null}]"#
         );
-        #[cfg(feature = "compact_serde")]
-        assert_eq!(serialized, r#"[{"node_id":1,"value":2,"parent":null}]"#);
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "compact_serde"), ignore)]
+    fn test_nodes_compact_serialize() {
+        let root_node = Node::new(1, Some(2));
+        let child_node = Node::new(2, Some(3));
+        root_node.add_child(child_node.clone());
+        let nodes = Nodes::new(vec![root_node, child_node]);
+        let serialized = serde_json::to_string(&nodes).unwrap();
+        assert_eq!(
+            serialized,
+            r#"[{"node_id":1,"value":2,"parent":null},{"node_id":2,"value":3,"parent":1}]"#
+        );
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "compact_serde"), ignore)]
+    fn test_nodes_compact_deserialize() {
+        let serialized =
+            r#"[{"node_id":1,"value":2,"parent":null},{"node_id":2,"value":3,"parent":1}]"#;
+        let nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+        let deserialized: Nodes<i32, i32> = serde_json::from_str(serialized).unwrap();
+        assert_eq!(nodes, deserialized);
     }
 
     #[test]
