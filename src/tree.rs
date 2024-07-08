@@ -73,7 +73,7 @@ pub type SubTree<Q, T> = Tree<Q, T>;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
@@ -83,7 +83,7 @@ where
 
 impl<Q, T> Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display + Hash + Ord,
+    Q: PartialEq + Default + Eq + Clone + Display + Hash + Ord,
     T: PartialEq + Eq + Clone,
 {
     /// Create a new tree.
@@ -881,7 +881,7 @@ where
 
 impl<Q, T> Default for Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     /// Create a new tree with no nodes.
@@ -895,7 +895,7 @@ where
 
 impl<Q, T> Display for Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display + Hash + Ord,
+    Q: PartialEq + Eq + Default + Clone + Display + Hash + Ord,
     T: PartialEq + Eq + Clone + Display + Default,
 {
     /// Print the tree.
@@ -916,7 +916,7 @@ where
 
 impl<Q, T> Drop for Tree<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     /// Drop the tree.

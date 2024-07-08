@@ -376,6 +376,7 @@ where
         let mut state = serializer.serialize_struct("Node", 4)?;
         state.serialize_field("node_id", &self.get_node_id())?;
         state.serialize_field("value", &self.get_value())?;
+        #[cfg(not(feature = "compact_serde"))]
         state.serialize_field("children", &self.get_children_ids())?;
         state.serialize_field("parent", &self.get_parent_id())?;
         state.end()
@@ -385,7 +386,7 @@ where
 #[cfg(feature = "serde")]
 impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Deserialize<'de>,
+    Q: PartialEq + Eq + Clone + Default + Deserialize<'de>,
     T: PartialEq + Eq + Clone + Deserialize<'de>,
 {
     /// Deserialize the node.
@@ -415,6 +416,7 @@ where
     /// The value of the node.
     value: Option<T>,
     /// The children of the node.
+    #[cfg_attr(all(feature = "serde", feature = "compact_serde"), serde(skip))]
     children: Vec<Q>,
     /// The parent of the node.
     parent: Option<Q>,
@@ -429,16 +431,16 @@ where
 ///
 /// * `Q` - The type of the unique id of the node.
 /// * `T` - The type of the value of the node.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Nodes<Q, T>(Vec<Node<Q, T>>)
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone;
 
 impl<Q, T> Nodes<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     /// Create a new iterator over the nodes in a tree.
@@ -725,7 +727,7 @@ where
 
 impl<Q, T> AsRef<Nodes<Q, T>> for Nodes<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     /// Get a reference to the nodes list.
@@ -736,7 +738,7 @@ where
 
 impl<Q, T> FromIterator<Node<Q, T>> for Nodes<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     /// Create a nodes list from an iterator.
@@ -747,7 +749,7 @@ where
 
 impl<Q, T> Iterator for Nodes<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     type Item = Node<Q, T>;
@@ -766,7 +768,7 @@ where
 
 impl<Q, T> Default for Nodes<Q, T>
 where
-    Q: PartialEq + Eq + Clone,
+    Q: PartialEq + Default + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
     /// Create an empty nodes list.
@@ -775,9 +777,38 @@ where
     }
 }
 
+#[cfg(feature = "serde")]
+impl<'de, Q, T> Deserialize<'de> for Nodes<Q, T>
+where
+    Q: PartialEq + Default + Eq + Clone + Deserialize<'de>,
+    T: PartialEq + Eq + Clone + Deserialize<'de>,
+{
+    /// Deserialize the nodes list.
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let nodes: Vec<Node<Q, T>> = Deserialize::deserialize(deserializer)?;
+        if cfg!(feature = "compact_serde") {
+            // Rebuild the children data from the parent data.
+            for node in nodes.iter() {
+                // Find the parent of this node and add this node as a child to that parent node
+                if let Some(parent_node) = node.get_parent_id() {
+                    nodes
+                        .iter()
+                        .find(|x| x.get_node_id() == parent_node)
+                        .map(|x| x.add_child(node.clone()));
+                }
+            }
+            return Ok(Nodes(nodes));
+        }
+        Ok(Nodes(nodes))
+    }
+}
+
 impl<Q, T> Display for Nodes<Q, T>
 where
-    Q: PartialEq + Eq + Clone + Display,
+    Q: PartialEq + Default + Eq + Clone + Display,
     T: PartialEq + Eq + Clone + Display + Default,
 {
     /// Display the nodes list.

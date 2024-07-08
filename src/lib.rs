@@ -123,6 +123,7 @@
 //! - `auto_id`: Enables auto-generation of node IDs.
 //! - `no_std`: Disables the standard library.
 //! - `print_node_id`: Enables printing the node ID when printing the tree. It is disabled by default.
+//! - `compact-serde`: Enables compact serialization and deserialization of the tree.
 
 #![cfg_attr(feature = "no_std", no_std)]
 

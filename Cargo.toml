@@ -19,6 +19,7 @@ serde = ["serde/std"] # The "serde" feature enables serialization and deserializ
 auto_id = ["sequential_gen/default", "lazy_static/spin"] # This feature enables the automatic generation of unique identifiers for nodes.
 no_std = ["sequential_gen/no_std", "lazy_static/spin_no_std", "serde/alloc"] # The "no_std" feature enables the use of the library in no_std environments.
 print_node_id = [] # The "print_node_id" feature enables the printing of node identifiers in the Debug trait implementation of the Node struct.
+compact_serde = [] # The "compact_serde" feature enables the serialization of the library's types in a compact format.
 
 [dependencies]
 serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
