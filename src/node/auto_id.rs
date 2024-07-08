@@ -15,7 +15,7 @@ use crate::node::{_Node, Node};
 
 #[cfg(feature = "no_std")]
 lazy_static! {
-    static ref GENERATOR: SimpleGenerator<usize> = SimpleGenerator::new(1usize);
+    static ref GENERATOR: SimpleGenerator<u128> = SimpleGenerator::new(1u128);
 }
 
 #[cfg(not(feature = "no_std"))]
@@ -45,9 +45,12 @@ where
     /// ```rust
     /// # use tree_ds::prelude::*;
     ///
+    /// # #[cfg(feature = "auto_id")]
+    /// # {
     /// let node = Node::<AutomatedId, &str>::new_with_auto_id(Some("Harry Doe"));
     /// let node_2 = Node::<AutomatedId, &str>::new_with_auto_id(Some("Jane Doe"));
     /// assert_ne!(node.get_node_id(), node_2.get_node_id());
+    /// # }
     /// ```
     ///
     /// This is available only when the `auto_id` feature is enabled.
@@ -55,7 +58,7 @@ where
         #[cfg(not(feature = "async"))]
         {
             Self(Rc::new(RefCell::new(_Node {
-                node_id: Q::from(GENERATOR.generate() as u128),
+                node_id: Q::from(GENERATOR.generate()),
                 value,
                 children: vec![],
                 parent: None,
