@@ -1,11 +1,11 @@
 #[cfg(feature = "serde")]
-use serde::{ser::SerializeStruct, Deserialize, Serialize};
+use serde::{Deserialize, ser::SerializeStruct, Serialize};
 
+use crate::lib::*;
 #[cfg(feature = "async")]
 use crate::lib::Arc;
 #[cfg(not(feature = "async"))]
 use crate::lib::Rc;
-use crate::lib::*;
 
 #[cfg(feature = "auto_id")]
 mod auto_id;
@@ -51,8 +51,7 @@ where
 ///
 /// # Type Parameters
 ///
-/// * `Q` - The type of the unique id of the node. Odd, I know but this is for flexibility. Some people might want to use
-/// a string as the unique id of the node. Others might want to use an integer. This is why the unique id is a generic type.
+/// * `Q` - The type of the unique id of the node. Odd, I know but this is for flexibility. Some people might want to use a string as the unique id of the node. Others might want to use an integer. This is why the unique id is a generic type.
 /// * `T` - The type of the value of the node.
 ///
 /// # Fields

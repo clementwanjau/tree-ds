@@ -569,8 +569,7 @@ where
     /// # Arguments
     ///
     /// * `node_id` - The id of the node to get the subsection from.
-    /// * `generations` - The number of descendants to include in the subsection. If `None`, all the
-    /// descendants of the node are included in the subsection.
+    /// * `generations` - The number of descendants to include in the subsection. If `None`, all the descendants of the node are included in the subsection.
     ///
     /// # Returns
     ///
