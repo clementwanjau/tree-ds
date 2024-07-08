@@ -23,7 +23,7 @@ print_node_id = [] # The "print_node_id" feature enables the printing of node id
 [dependencies]
 serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
 thiserror = "1.0.61"
-sequential_gen = { version = "0.1.1", default-features = false }
+sequential_gen = { version = "0.1.2", default-features = false }
 lazy_static = { version = "1.4.0" }
 
 [dev-dependencies]
