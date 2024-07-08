@@ -937,10 +937,6 @@ mod tests {
     #[allow(deprecated)]
     #[cfg(feature = "no_std")]
     use core::hash::SipHasher as DefaultHasher;
-
-    #[cfg(feature = "serde")]
-    use serde_json::json;
-
     #[cfg(not(feature = "no_std"))]
     use std::hash::DefaultHasher;
 
@@ -1363,7 +1359,7 @@ mod tests {
     #[test]
     #[cfg_attr(feature = "no_std", ignore)]
     fn test_tree_deserialize_from_disk_with_auto_id_ensuring_uniqueness() {
-        let tree_str = json!({"name":"Sample Tree","nodes":[{"node_id":3,"value":2,"children":[4],"parent":null},{"node_id":4,"value":3,"children":[5],"parent":3},{"node_id":5,"value":4,"children":[6],"parent":4},{"node_id":6,"value":5,"children":[],"parent":5}]});
+        let tree_str = serde_json::json!({"name":"Sample Tree","nodes":[{"node_id":3,"value":2,"children":[4],"parent":null},{"node_id":4,"value":3,"children":[5],"parent":3},{"node_id":5,"value":4,"children":[6],"parent":4},{"node_id":6,"value":5,"children":[],"parent":5}]});
         let mut deserialized_tree =
             serde_json::from_value::<Tree<AutomatedId, i32>>(tree_str).unwrap();
         deserialized_tree
