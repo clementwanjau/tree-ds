@@ -1,15 +1,12 @@
 # Tree-ds
 
-[![Linux Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/linux.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/linux.yaml)
-[![MacOs Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/macos.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/macos.yaml)
-[![Windows Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/windows.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/windows.yaml)
-[![codecov](https://codecov.io/github/clementwanjau/tree-ds/graph/badge.svg?token=6EVSRDH76I)](https://codecov.io/github/clementwanjau/tree-ds)
-
-[![Crates.io](https://img.shields.io/crates/v/tree-ds.svg)](https://crates.io/crates/tree-ds)
+[![Build Status](https://github.com/clementwanjau/tree-ds/actions/workflows/build.yaml/badge.svg)](https://github.com/clementwanjau/tree-ds/actions/workflows/build.yaml)
 [![Documentation](https://docs.rs/tree-ds/badge.svg)](https://docs.rs/tree-ds)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Crates.io](https://img.shields.io/crates/v/tree-ds.svg)](https://crates.io/crates/tree-ds)
+[![Rust Version](https://img.shields.io/badge/rust-1.71+-yellow.svg)](https://www.rust-lang.org)
 
-![GitHub](https://img.shields.io/github/stars/clementwanjau/tree-ds?style=social)
+[![codecov](https://codecov.io/github/clementwanjau/tree-ds/graph/badge.svg?token=6EVSRDH76I)](https://codecov.io/github/clementwanjau/tree-ds)
 
 This library provides a tree data structure that can be used to represent
 hierarchical data in Rust. The library
