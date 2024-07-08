@@ -13,9 +13,9 @@ jobs:
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       - name: Cargo Hack Check
-        run: cargo hack check --each-feature --lib --tests
+        run: cargo hack check --feature-powerset --mutually-exclusive-features no_std,default --lib --tests --examples
       - name: Cargo Hack Test
-        run: cargo hack test --each-feature
+        run: cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
       - name: Publish
         run: cargo publish
         env:
