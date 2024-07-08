@@ -64,6 +64,7 @@ jobs:
           components: rustfmt, clippy
       - name: Setup Cache                                                             # Cache the dependencies
         uses: actions/cache@v3
+        continue-on-error: false
         with:
           path: |
             ~/.cargo/bin/
@@ -75,8 +76,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo
-      - name: Run clippy                                                              # Lint the code
-        run: cargo clippy --all-targets --all-features -- -Dwarnings
+      - name: Linting                                                                 # Lint the code
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets --all-features -- -Dwarnings
       - name: Update dependencies                                                     # Update dependencies
         run: cargo update
       - name: Install cargo-hack
