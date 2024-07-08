@@ -130,15 +130,22 @@
 extern crate alloc;
 
 mod lib {
+    #[cfg(feature = "no_std")]
+    pub use alloc::{
+        collections::BTreeSet,
+        string::{String, ToString},
+        vec,
+        vec::Vec,
+    };
     #[cfg(all(test, feature = "no_std"))]
-    pub use alloc::format;
+        pub use alloc::format;
     #[cfg(all(feature = "no_std", not(feature = "async")))]
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
-    #[cfg(feature = "no_std")]
-    pub use alloc::{
-        collections::BTreeSet,
+    #[cfg(not(feature = "no_std"))]
+    pub use std::{
+        collections::HashSet,
         string::{String, ToString},
         vec,
         vec::Vec,
@@ -149,13 +156,6 @@ mod lib {
     pub use std::rc::Rc;
     #[cfg(all(not(feature = "no_std"), feature = "async"))]
     pub use std::sync::Arc;
-    #[cfg(not(feature = "no_std"))]
-    pub use std::{
-        collections::HashSet,
-        string::{String, ToString},
-        vec,
-        vec::Vec,
-    };
 
     pub use self::core::cell::RefCell;
     pub use self::core::clone::Clone;
@@ -185,8 +185,14 @@ pub mod prelude {
 
     pub use crate::{
         node::{Node, Nodes},
-        tree::{AutomatedId, NodeRemovalStrategy, SubTree, TraversalStrategy, Tree},
+        tree::{NodeRemovalStrategy, SubTree, TraversalStrategy, Tree},
     };
+
+    /// Defines the default type for the node id.
+    ///
+    /// The default type for the node id is `u128`.
+    #[cfg(feature = "auto_id")]
+    pub type AutomatedId = u128;
 
     /// The error type for this crate.
     pub type Result<T> = crate::lib::Result<T, crate::error::Error>;
