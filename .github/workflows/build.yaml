@@ -75,10 +75,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-cargo
-      - name: Run rustfmt                                                             # Format the code
-        run: cargo fmt
-      - name: Run Cargo Fix                                                           # Fix the code
-        run: cargo fix
       - name: Run clippy                                                              # Lint the code
         run: cargo clippy --all-targets --all-features -- -Dwarnings
       - name: Update dependencies                                                     # Update dependencies
