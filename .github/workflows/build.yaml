@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+      - name: Setup Cache                                                             # Cache the dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/debug/deps/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo
+      - name: Run rustfmt                                                             # Format the code
+        run: cargo fmt
+      - name: Run Cargo Fix                                                           # Fix the code
+        run: cargo fix
+      - name: Run clippy                                                              # Lint the code
+        run: cargo clippy --all-targets --all-features -- -Dwarnings
+      - name: Update dependencies                                                     # Update dependencies
+        run: cargo update
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      - name: Cargo Hack Check
+        run: cargo hack check --feature-powerset --mutually-exclusive-features no_std,default --lib --tests --examples
+      - name: Cargo Hack Test
+        run: cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
+        env:
+          CARGO_INCREMENTAL: '0'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+      - name: rust-grcov
+        uses: actions-rs/grcov@v0.1
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
