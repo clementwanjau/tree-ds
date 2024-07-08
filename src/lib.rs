@@ -130,22 +130,15 @@
 extern crate alloc;
 
 mod lib {
-    #[cfg(feature = "no_std")]
-    pub use alloc::{
-        collections::BTreeSet,
-        string::{String, ToString},
-        vec,
-        vec::Vec,
-    };
     #[cfg(all(test, feature = "no_std"))]
-        pub use alloc::format;
+    pub use alloc::format;
     #[cfg(all(feature = "no_std", not(feature = "async")))]
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
-    #[cfg(not(feature = "no_std"))]
-    pub use std::{
-        collections::HashSet,
+    #[cfg(feature = "no_std")]
+    pub use alloc::{
+        collections::BTreeSet,
         string::{String, ToString},
         vec,
         vec::Vec,
@@ -156,6 +149,13 @@ mod lib {
     pub use std::rc::Rc;
     #[cfg(all(not(feature = "no_std"), feature = "async"))]
     pub use std::sync::Arc;
+    #[cfg(not(feature = "no_std"))]
+    pub use std::{
+        collections::HashSet,
+        string::{String, ToString},
+        vec,
+        vec::Vec,
+    };
 
     pub use self::core::cell::RefCell;
     pub use self::core::clone::Clone;

@@ -6,12 +6,12 @@ use sequential_gen::prelude::Generator;
 #[cfg(feature = "no_std")]
 use sequential_gen::prelude::SimpleGenerator;
 
-use crate::lib::*;
 #[cfg(feature = "async")]
 use crate::lib::Arc;
 #[cfg(not(feature = "async"))]
 use crate::lib::Rc;
-use crate::node::{_Node, Node};
+use crate::lib::*;
+use crate::node::{Node, _Node};
 
 #[cfg(feature = "no_std")]
 lazy_static! {
@@ -67,7 +67,7 @@ where
         #[cfg(feature = "async")]
         {
             Self(Arc::new(RefCell::new(_Node {
-                node_id: Q::from(GENERATOR.generate() as u128),
+                node_id: Q::from(GENERATOR.generate()),
                 value,
                 children: vec![],
                 parent: None,

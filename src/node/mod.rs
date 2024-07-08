@@ -1,11 +1,11 @@
 #[cfg(feature = "serde")]
-use serde::{Deserialize, ser::SerializeStruct, Serialize};
+use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
-use crate::lib::*;
 #[cfg(feature = "async")]
 use crate::lib::Arc;
 #[cfg(not(feature = "async"))]
 use crate::lib::Rc;
+use crate::lib::*;
 
 #[cfg(feature = "auto_id")]
 mod auto_id;
