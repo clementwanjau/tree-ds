@@ -1,12 +1,12 @@
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::error::Error::{InvalidOperation, NodeNotFound, RootNodeAlreadyPresent};
 use crate::lib::*;
 #[cfg(feature = "no_std")]
 use crate::lib::BTreeSet;
 use crate::node::Nodes;
 use crate::prelude::{Node, Result};
+
+#[cfg(feature = "serde")]
+mod serde;
 
 /// The strategy to use when removing a node from the tree.
 ///
@@ -69,14 +69,12 @@ pub type SubTree<Q, T> = Tree<Q, T>;
 ///
 /// let tree: Tree<i32, i32> = Tree::new(Some("Sample Tree"));
 /// ```
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Tree<Q, T>
 where
     Q: PartialEq + Eq + Clone,
     T: PartialEq + Eq + Clone,
 {
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     name: Option<String>,
     nodes: Nodes<Q, T>,
 }
@@ -1299,74 +1297,6 @@ mod tests {
             .unwrap();
         let expected_post_order = vec![node_4, node_5, node_2, node_6, node_3, node_1];
         assert_eq!(post_order_nodes, expected_post_order);
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_tree_serialize_and_deserialize() {
-        let mut tree = Tree::new(None);
-        let node_1 = tree.add_node(Node::new(1, Some(2)), None).unwrap();
-        let node_2 = tree.add_node(Node::new(2, Some(3)), Some(&node_1)).unwrap();
-        let node_3 = tree.add_node(Node::new(3, Some(6)), Some(&node_2)).unwrap();
-        tree.add_node(Node::new(4, Some(5)), Some(&node_2)).unwrap();
-        tree.add_node(Node::new(5, Some(6)), Some(&node_3)).unwrap();
-        let serialized = serde_json::to_string(&tree).unwrap();
-        let expected = r#"{"nodes":[{"node_id":1,"value":2,"parent":null,"children":[2]},{"node_id":2,"value":3,"parent":1,"children":[3,4]},{"node_id":3,"value":6,"parent":2,"children":[5]},{"node_id":4,"value":5,"parent":2,"children":[]},{"node_id":5,"value":6,"parent":3,"children":[]}]}"#;
-        let deserialized: Tree<u32, u32> = serde_json::from_str(&serialized).unwrap();
-        let expected_tree: Tree<u32, u32> = serde_json::from_str(expected).unwrap();
-        assert_eq!(deserialized, expected_tree);
-    }
-
-    #[cfg(all(feature = "auto_id", feature = "serde"))]
-    #[test]
-    fn test_tree_serialize_and_deserialize_with_auto_id_ensuring_uniqueness() {
-        let mut tree = Tree::<crate::prelude::AutomatedId, i32>::new(Some("Sample Tree"));
-        let root = tree
-            .add_node(Node::new_with_auto_id(Some(2)), None)
-            .unwrap();
-        let child_1 = tree
-            .add_node(Node::new_with_auto_id(Some(3)), Some(&root))
-            .unwrap();
-        let child_2 = tree
-            .add_node(Node::new_with_auto_id(Some(4)), Some(&child_1))
-            .unwrap();
-        let child_3 = tree
-            .add_node(Node::new_with_auto_id(Some(5)), Some(&child_2))
-            .unwrap();
-        let serialized_tree = serde_json::to_string(&tree).unwrap();
-        let mut deserialized_tree: Tree<crate::prelude::AutomatedId, i32> =
-            serde_json::from_str(&serialized_tree).unwrap();
-        deserialized_tree
-            .add_node(Node::new_with_auto_id(Some(6)), Some(&child_3))
-            .unwrap();
-        let mut node_ids = deserialized_tree
-            .get_nodes()
-            .iter()
-            .map(|node| node.get_node_id())
-            .collect::<Vec<_>>();
-        node_ids.sort();
-        node_ids.dedup();
-        assert_eq!(node_ids.len(), deserialized_tree.get_nodes().len());
-    }
-
-    #[cfg(all(feature = "auto_id", feature = "serde"))]
-    #[test]
-    #[cfg_attr(feature = "no_std", ignore)]
-    fn test_tree_deserialize_from_disk_with_auto_id_ensuring_uniqueness() {
-        let tree_str = serde_json::json!({"name":"Sample Tree","nodes":[{"node_id":3,"value":2,"children":[4],"parent":null},{"node_id":4,"value":3,"children":[5],"parent":3},{"node_id":5,"value":4,"children":[6],"parent":4},{"node_id":6,"value":5,"children":[],"parent":5}]});
-        let mut deserialized_tree =
-            serde_json::from_value::<Tree<crate::prelude::AutomatedId, i32>>(tree_str).unwrap();
-        deserialized_tree
-            .add_node(Node::new_with_auto_id(Some(6)), Some(&6))
-            .unwrap();
-        let mut node_ids = deserialized_tree
-            .get_nodes()
-            .iter()
-            .map(|node| node.get_node_id())
-            .collect::<Vec<_>>();
-        node_ids.sort();
-        node_ids.dedup();
-        assert_eq!(node_ids.len(), deserialized_tree.get_nodes().len());
     }
 
     #[allow(deprecated)] // This is solely for testing hashing in no_std.

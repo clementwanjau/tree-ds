@@ -1,6 +1,3 @@
-#[cfg(feature = "serde")]
-use serde::{Deserialize, ser::SerializeStruct, Serialize};
-
 use crate::lib::*;
 #[cfg(feature = "async")]
 use crate::lib::Arc;
@@ -9,6 +6,8 @@ use crate::lib::Rc;
 
 #[cfg(feature = "auto_id")]
 mod auto_id;
+#[cfg(feature = "serde")]
+mod serde;
 
 /// A node in a tree.
 ///
@@ -362,48 +361,7 @@ where
     }
 }
 
-#[cfg(feature = "serde")]
-impl<Q, T> Serialize for Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone + Serialize,
-    T: PartialEq + Eq + Clone + Serialize,
-{
-    /// Serialize the node.
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("Node", 4)?;
-        state.serialize_field("node_id", &self.get_node_id())?;
-        state.serialize_field("value", &self.get_value())?;
-        state.serialize_field("children", &self.get_children_ids())?;
-        state.serialize_field("parent", &self.get_parent_id())?;
-        state.end()
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, Q, T> Deserialize<'de> for Node<Q, T>
-where
-    Q: PartialEq + Eq + Clone + Deserialize<'de>,
-    T: PartialEq + Eq + Clone + Deserialize<'de>,
-{
-    /// Deserialize the node.
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let node: _Node<Q, T> = Deserialize::deserialize(deserializer)?;
-
-        #[cfg(not(feature = "async"))]
-        return Ok(Node(Rc::new(RefCell::new(node))));
-        #[cfg(feature = "async")]
-        return Ok(Node(Arc::new(RefCell::new(node))));
-    }
-}
-
 #[doc(hidden)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct _Node<Q, T>
 where
@@ -429,7 +387,6 @@ where
 ///
 /// * `Q` - The type of the unique id of the node.
 /// * `T` - The type of the value of the node.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Nodes<Q, T>(Vec<Node<Q, T>>)
 where
@@ -885,26 +842,6 @@ mod tests {
         assert_eq!(format!("{}", node), "2");
     }
 
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_node_serialize() {
-        let node = Node::new(1, Some(2));
-        let serialized = serde_json::to_string(&node).unwrap();
-        assert_eq!(
-            serialized,
-            r#"{"node_id":1,"value":2,"children":[],"parent":null}"#
-        );
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_node_deserialize() {
-        let node = Node::new(1, Some(2));
-        let serialized = serde_json::to_string(&node).unwrap();
-        let deserialized: Node<i32, i32> = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(node, deserialized);
-    }
-
     #[test]
     fn test_nodes() {
         let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
@@ -1034,25 +971,5 @@ mod tests {
         assert_eq!(format!("{}", nodes), "1: 2");
         #[cfg(not(feature = "print_node_id"))]
         assert_eq!(format!("{}", nodes), "2");
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_nodes_serialize() {
-        let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
-        let serialized = serde_json::to_string(&nodes).unwrap();
-        assert_eq!(
-            serialized,
-            r#"[{"node_id":1,"value":2,"children":[],"parent":null}]"#
-        );
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_nodes_deserialize() {
-        let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
-        let serialized = serde_json::to_string(&nodes).unwrap();
-        let deserialized: Nodes<i32, i32> = serde_json::from_str(&serialized).unwrap();
-        assert_eq!(nodes, deserialized);
     }
 }

@@ -183,7 +183,7 @@ fn test_tree() -> Result<()> {
     // endregion
 
     // region:- Serialize and deserialize the tree.
-    #[cfg(feature = "serde")]
+    #[cfg(all(feature = "serde", not(feature = "compact_serde")))]
     {
         let expected_str = serde_json::to_string(&tree).unwrap();
         let serialized_tree = r##"{"name":"Corporate Structure","nodes":[{"node_id":"Managing Director","value":"Harry Doe","children":["CEO"],"parent":null},{"node_id":"CEO","value":"Francois Mercer","children":["CTO","CFO","CMO","COO","CLO"],"parent":"Managing Director"},{"node_id":"CTO","value":"John Doe","children":[],"parent":"CEO"},{"node_id":"CFO","value":"Jane Doe","children":["Finance Manager"],"parent":"CEO"},{"node_id":"CMO","value":"Alice Doe","children":["Marketing Manager"],"parent":"CEO"},{"node_id":"COO","value":"Bob Doe","children":["Operations Manager"],"parent":"CEO"},{"node_id":"CLO","value":"Eve Doe","children":["Legal Manager"],"parent":"CEO"},{"node_id":"Operations Manager","value":"Charlie Doe","children":["Operations Team Member 1","Operations Team Member 2","Operations Team Member 3","Operations Team Member 4"],"parent":"COO"},{"node_id":"Finance Manager","value":"David Doe","children":["Finance Team Lead"],"parent":"CFO"},{"node_id":"Marketing Manager","value":"Grace Doe","children":["Marketing Team Lead"],"parent":"CMO"},{"node_id":"Legal Manager","value":"Hannah Doe","children":["Legal Team Lead"],"parent":"CLO"},{"node_id":"Legal Team Lead","value":"Katie Doe","children":["Legal Team Member 1","Legal Team Member 2","Legal Team Member 3"],"parent":"Legal Manager"},{"node_id":"Legal Team Member 1","value":"Liam Doe","children":[],"parent":"Legal Team Lead"},{"node_id":"Legal Team Member 2","value":"Mia Doe","children":[],"parent":"Legal Team Lead"},{"node_id":"Legal Team Member 3","value":"Noah Doe","children":[],"parent":"Legal Team Lead"},{"node_id":"Finance Team Lead","value":"Tom Doe","children":["Finance Team Member 1","Finance Team Member 2","Finance Team Member 3"],"parent":"Finance Manager"},{"node_id":"Finance Team Member 1","value":"Ursula Doe","children":[],"parent":"Finance Team Lead"},{"node_id":"Finance Team Member 2","value":"Victor Doe","children":[],"parent":"Finance Team Lead"},{"node_id":"Finance Team Member 3","value":"Wendy Doe","children":[],"parent":"Finance Team Lead"},{"node_id":"Marketing Team Lead","value":"Xander Doe","children":["Marketing Team Member 1","Marketing Team Member 2"],"parent":"Marketing Manager"},{"node_id":"Marketing Team Member 1","value":"Yara Doe","children":[],"parent":"Marketing Team Lead"},{"node_id":"Marketing Team Member 2","value":"Zane Doe","children":[],"parent":"Marketing Team Lead"},{"node_id":"Operations Team Member 1","value":"Ben Doe","children":[],"parent":"Operations Manager"},{"node_id":"Operations Team Member 2","value":"Cara Doe","children":[],"parent":"Operations Manager"},{"node_id":"Operations Team Member 3","value":"Dylan Doe","children":[],"parent":"Operations Manager"},{"node_id":"Operations Team Member 4","value":"Ella Doe","children":[],"parent":"Operations Manager"}]}"##;
@@ -217,7 +217,7 @@ fn test_tree() -> Result<()> {
     Ok(())
 }
 
-#[cfg(all(not(target_os = "macos"), feature = "auto_id", not(feature = "no_std")))]
+#[cfg(all(feature = "auto_id", not(feature = "no_std")))]
 #[test]
 fn test_tree_with_auto_id() -> Result<()> {
     #[cfg(feature = "serde")]

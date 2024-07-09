@@ -107,6 +107,17 @@
 //!        └── Node 4: 6
 //! ```
 //!
+//! ## Serialization and Deserialization
+//! The tree data structure can be serialized and deserialized using the `serde` feature. By default,
+//! the tree serializes all the fields within the nodes. However, you can enable the `compact_serde`
+//! feature to serialize only the important node data that is sufficient to properly deserialize the
+//! node. This is useful when you want to serialize the tree and store it in a file or a database. The
+//! `compact_serde` feature is meant to be used with either the `serde` or the `no_std` feature. Enabling
+//! this feature without the `serde` or the `no_std` feature will result in nothing being serialized or
+//! deserialized. It should be noted that this feature adds an overhead when deserializing the data since
+//! the tree has to be reconstructed from the serialized data.
+//!
+//!
 //! ## `no_std` Environments.
 //! This crate can be used in `no_std` environments by enabling the `no_std` feature.
 //!
@@ -114,6 +125,12 @@
 //! [dependencies]
 //! tree-ds = { version = "0.1", features = ["no_std"] }
 //! ```
+//! The `no_std` feature disables the standard library and uses the `alloc` crate instead. The `alloc`
+//! crate provides the necessary types for the tree data structure to work in `no_std` environments.
+//! The `no_std` feature is useful when you want to use the tree data structure in embedded systems or
+//! environments where the standard library is not available. This feature also supports serialization
+//! and deserialization of the tree data structure as well as limited `auto_id` support.
+//!
 //!
 //! ## Cargo Features
 //! The following cargo features are also available:
@@ -123,6 +140,7 @@
 //! - `auto_id`: Enables auto-generation of node IDs.
 //! - `no_std`: Disables the standard library.
 //! - `print_node_id`: Enables printing the node ID when printing the tree. It is disabled by default.
+//! - `compact-serde`: Enables compact serialization and deserialization of the tree. It is meant to be used with either the `serde` or the `no_std` features. Enabling this feature without the `serde` or the `no_std` feature will result in nothing being serialized or deserialized.
 
 #![cfg_attr(feature = "no_std", no_std)]
 
@@ -143,6 +161,7 @@ mod lib {
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
+
     #[cfg(not(feature = "no_std"))]
     pub use std::{
         collections::HashSet,
@@ -171,6 +190,7 @@ mod lib {
     mod core {
         #[cfg(feature = "no_std")]
         pub use core::*;
+
         #[cfg(not(feature = "no_std"))]
         pub use std::*;
     }
