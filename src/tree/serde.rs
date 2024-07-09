@@ -1,5 +1,3 @@
-use alloc::string::String;
-
 use ::serde::{Deserialize, ser::SerializeStruct, Serialize};
 
 use crate::lib::*;
@@ -59,8 +57,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec::Vec;
-
     use crate::prelude::Node;
 
     use super::*;
