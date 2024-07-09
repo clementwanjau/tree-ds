@@ -217,7 +217,7 @@ fn test_tree() -> Result<()> {
     Ok(())
 }
 
-#[cfg(all(not(target_os = "macos"), feature = "auto_id", not(feature = "no_std")))]
+#[cfg(all(feature = "auto_id", not(feature = "no_std")))]
 #[test]
 fn test_tree_with_auto_id() -> Result<()> {
     #[cfg(feature = "serde")]
