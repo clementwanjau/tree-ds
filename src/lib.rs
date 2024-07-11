@@ -44,13 +44,13 @@
 //! ```
 //! However, you can enable the `auto_id` feature to generate IDs automatically. This is useful when
 //! you want to create a node without specifying the ID. For a node to be created with an auto-generated
-//! ID, the `Q` type must implement the `From<i32>` trait.
+//! ID, the `Q` type must implement the `From<u128>` trait.
 //!
 //! ```rust, ignore
 //! use tree_ds::prelude::*;
 //!
-//! let node = Node::<i32, &str>::new_with_auto_id(Some("Harry Doe"));
-//! let node_2 = Node::<i32, &str>::new_with_auto_id(Some("Jane Doe"));
+//! let node = Node::<AutomatedId, &str>::new_with_auto_id(Some("Harry Doe"));
+//! let node_2 = Node::<AutomatedId, &str>::new_with_auto_id(Some("Jane Doe"));
 //! assert_ne!(node.get_node_id(), node_2.get_node_id());//!
 //! ```
 //!

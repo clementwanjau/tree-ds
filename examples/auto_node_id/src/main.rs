@@ -1,7 +1,9 @@
 use tree_ds::prelude::*;
 
+type AutoTree<T> = Tree<AutomatedId, T>;
+
 fn main() {
-    let mut tree = Tree::<AutomatedId, &str>::new(Some("Sample Tree"));
+    let mut tree = AutoTree::<&str>::new(Some("Sample Tree"));
     let ceo_node = tree
         .add_node(Node::new_with_auto_id(Some("CEO")), None)
         .unwrap();
