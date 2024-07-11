@@ -36,4 +36,5 @@ build:
 test:
   stage: test
   script:
+    - cargo install cargo-hack
     - cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
