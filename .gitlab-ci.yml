@@ -1,0 +1,39 @@
+default:
+  image: rust:latest
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - .cargo/bin
+      - .cargo/registry/index
+      - .cargo/registry/cache
+      - target/debug/deps
+  before_script:
+    - rustc --version
+
+stages:
+  - source
+  - update dependencies
+  - build
+  - test
+
+linting:
+  stage: source
+  script:
+    - rustup component add clippy
+    - cargo clippy --all-targets --all-features -- -Dwarnings
+
+update-dependencies:
+  stage: update dependencies
+  script:
+    - cargo update
+
+build:
+  stage: build
+  script:
+    - cargo install cargo-hack
+    - cargo hack check --feature-powerset --mutually-exclusive-features no_std,default --lib --tests --examples
+
+test:
+  stage: test
+  script:
+    - cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
