@@ -23,7 +23,7 @@ compact_serde = [] # The "compact_serde" feature enables the serialization of th
 
 [dependencies]
 serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
-thiserror = "1.0.61"
+thiserror = "2.0.3"
 sequential_gen = { version = "0.1.2", default-features = false }
 lazy_static = { version = "1.4.0" }
 
