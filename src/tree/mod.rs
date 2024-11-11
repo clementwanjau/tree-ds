@@ -1,7 +1,7 @@
 use crate::error::Error::{InvalidOperation, NodeNotFound, RootNodeAlreadyPresent};
-use crate::lib::*;
 #[cfg(feature = "no_std")]
 use crate::lib::BTreeSet;
+use crate::lib::*;
 use crate::node::Nodes;
 use crate::prelude::{Node, Result};
 
@@ -1330,5 +1330,27 @@ mod tests {
         tree_2.hash(&mut hasher);
         let tree_2_hash = hasher.finish();
         assert_eq!(tree_hash, tree_2_hash);
+    }
+
+    #[test]
+    fn test_sort_children_by_height() {
+        let mut tree = Tree::new(Some("Sample Tree"));
+        let node_1 = tree.add_node(Node::new(1, Some(1)), None).unwrap();
+        let _node_2 = tree.add_node(Node::new(2, Some(2)), Some(&node_1)).unwrap();
+        let node_3 = tree.add_node(Node::new(3, Some(3)), Some(&node_1)).unwrap();
+        let node_4 = tree.add_node(Node::new(4, Some(4)), Some(&node_3)).unwrap();
+        let _node_5 = tree.add_node(Node::new(5, Some(5)), Some(&node_4)).unwrap();
+
+        let root = tree.get_node_by_id(&node_1).unwrap();
+        root.sort_children(|a, b| {
+            let a_height = tree.get_node_height(a).unwrap();
+            let b_height = tree.get_node_height(b).unwrap();
+            a_height.cmp(&b_height).reverse()
+        });
+
+        assert_eq!(
+            tree.get_node_by_id(&node_1).unwrap().get_children_ids(),
+            vec![3, 2]
+        );
     }
 }
