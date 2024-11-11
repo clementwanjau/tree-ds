@@ -1,8 +1,10 @@
-use crate::lib::*;
+use core::cmp::Ordering;
+
 #[cfg(feature = "async")]
 use crate::lib::Arc;
 #[cfg(not(feature = "async"))]
 use crate::lib::Rc;
+use crate::lib::*;
 
 #[cfg(feature = "auto_id")]
 mod auto_id;
@@ -310,6 +312,41 @@ where
             parent.add_child(self.clone());
         }
         self.0.borrow_mut().parent = parent.map(|x| x.get_node_id());
+    }
+
+    /// Sort the children of the node by an ordering closure.
+    ///
+    /// # Arguments
+    ///
+    /// * `compare` - The closure to use for comparison.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use tree_ds::prelude::Node;
+    ///
+    /// let parent_node = Node::new(1, Some(2));
+    /// let child1 = Node::new(2, Some(3));
+    /// let child2 = Node::new(3, Some(4));
+    /// parent_node.add_child(child1);
+    /// parent_node.add_child(child2);
+    ///
+    /// parent_node.sort_children(|a, b| a.cmp(&b).reverse());
+    /// assert_eq!(parent_node.get_children_ids(), vec![3, 2]);
+    /// ```
+    pub fn sort_children(&self, compare: impl Fn(&Q, &Q) -> Ordering)
+    where
+        Q: Debug,
+    {
+        let mut children = self.0.borrow().children.clone();
+        children.sort_by(|a, b| compare(a, b));
+        self.update_children(children);
+    }
+
+    fn update_children(&self, update: impl AsRef<[Q]>) {
+        let children = &mut self.0.borrow_mut().children;
+        children.clear();
+        children.extend_from_slice(update.as_ref());
     }
 }
 
