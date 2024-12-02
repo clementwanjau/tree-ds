@@ -660,7 +660,7 @@ where
         let node = self
             .get_node_by_id(node_id)
             .ok_or(NodeNotFound(node_id.to_string()))?;
-        return if let Some(parent_id) = node.get_parent_id() {
+        if let Some(parent_id) = node.get_parent_id() {
             let parent = self
                 .get_node_by_id(&parent_id)
                 .ok_or(NodeNotFound(parent_id.to_string()))?;
@@ -679,7 +679,7 @@ where
             Ok(vec![node_id.clone()])
         } else {
             Ok(vec![])
-        };
+        }
     }
 
     /// Add a subsection to the tree.
