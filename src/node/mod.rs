@@ -289,6 +289,28 @@ where
         self.0.borrow_mut().value = value;
     }
 
+    /// Update the value of the node.
+    ///
+    /// This method updates the value of the node using a closure.
+    ///
+    /// # Arguments
+    ///
+    /// * `modifier` - The closure to use for updating the value.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use tree_ds::prelude::Node;
+    ///
+    /// let node = Node::new(1, Some(2));
+    /// node.update_value(|value| *value = Some(3));
+    /// assert_eq!(node.get_value(), Some(3));
+    /// ```
+    pub fn update_value(&self, modifier: impl FnOnce(&mut Option<T>)) {
+        let mut node = self.0.borrow_mut();
+        modifier(&mut node.value);
+    }
+
     /// Set the parent of the node.
     ///
     /// This method sets the parent of the node.
@@ -856,6 +878,13 @@ mod tests {
         parent_node.add_child(child_node.clone());
         parent_node.remove_child(child_node);
         assert_eq!(parent_node.get_children_ids().len(), 0);
+    }
+
+    #[test]
+    fn test_node_update_value() {
+        let node = Node::new(1, Some(2));
+        node.update_value(|value| *value = value.map(|x| x + 1));
+        assert_eq!(node.get_value(), Some(3));
     }
 
     #[test]
