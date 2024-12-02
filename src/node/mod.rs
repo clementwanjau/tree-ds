@@ -1,8 +1,8 @@
-use crate::lib::*;
 #[cfg(feature = "async")]
 use crate::lib::Arc;
 #[cfg(not(feature = "async"))]
 use crate::lib::Rc;
+use crate::lib::*;
 
 #[cfg(feature = "auto_id")]
 mod auto_id;
@@ -841,6 +841,13 @@ mod tests {
         parent_node.add_child(child_node.clone());
         parent_node.remove_child(child_node);
         assert_eq!(parent_node.get_children_ids().len(), 0);
+    }
+
+    #[test]
+    fn test_node_update_value() {
+        let node = Node::new(1, Some(2));
+        node.update_value(|value| *value = value.map(|x| x + 1));
+        assert_eq!(node.get_value(), Some(3));
     }
 
     #[test]
