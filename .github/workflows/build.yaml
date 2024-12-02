@@ -57,11 +57,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
-          override: true
-          components: clippy
+          components: rustc, rust-std, cargo, clippy, llvm-tools, llvm-tools-preview
+      - name: Install grcov
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: grcov
       - name: Setup Cache                                                             # Cache the dependencies
         uses: actions/cache@v3
         continue-on-error: false
@@ -84,14 +86,16 @@ jobs:
         uses: taiki-e/install-action@cargo-hack
       - name: Cargo Hack Check
         run: cargo hack check --feature-powerset --mutually-exclusive-features no_std,default --lib --tests --examples
+      - run: mkdir -p ./target/debug/coverage
       - name: Cargo Hack Test
         run: cargo hack test --feature-powerset --mutually-exclusive-features no_std,default
         env:
           CARGO_INCREMENTAL: '0'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-      - name: rust-grcov
-        uses: actions-rs/grcov@v0.1
+          LLVM_PROFILE_FILE: 'target/debug/coverage/dcaf-%p-%m.profraw'
+          RUSTFLAGS: '-Cinstrument-coverage -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-C instrument-coverage -Cpanic=abort -Zpanic_abort_tests -Z unstable-options --persist-doctests target/debug/'
+      - run: zip ./target/debug/coverage/files.zip ./target/debug/coverage/dcaf-*.profraw
+      - run: grcov ./target/debug/coverage/files.zip -s . --binary-path ./target/debug/ --service-name "Continous Integration" --commit-sha ${GITHUB_SHA} -t lcov --branch --ignore-not-existing -o ./lcov.info
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
