@@ -95,7 +95,7 @@ jobs:
           RUSTFLAGS: '-Cinstrument-coverage -Cpanic=abort -Zpanic_abort_tests'
           RUSTDOCFLAGS: '-C instrument-coverage -Cpanic=abort -Zpanic_abort_tests -Z unstable-options --persist-doctests target/debug/'
       - run: zip ./target/debug/coverage/files.zip ./target/debug/coverage/dcaf-*.profraw
-      - run: grcov ./target/debug/coverage/files.zip -s . --binary-path ./target/debug/ --service-name "Continous Integration" --commit-sha ${GITHUB_SHA} -t codecov --branch --ignore-not-existing -o ./target/debug/coverage/
+      - run: grcov ./target/debug/coverage/files.zip -s . --binary-path ./target/debug/ --service-name "Continous Integration" --commit-sha ${GITHUB_SHA} -t lcov --branch --ignore-not-existing -o ./lcov.info
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
