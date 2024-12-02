@@ -60,6 +60,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustc, rust-std, cargo, clippy, llvm-tools, llvm-tools-preview
+      - name: Install grcov
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: grcov
       - name: Setup Cache                                                             # Cache the dependencies
         uses: actions/cache@v3
         continue-on-error: false
