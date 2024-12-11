@@ -447,10 +447,13 @@ where
 /// * `Q` - The type of the unique id of the node.
 /// * `T` - The type of the value of the node.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Nodes<Q, T>(Vec<Node<Q, T>>)
+pub struct Nodes<Q, T>
 where
     Q: PartialEq + Eq + Clone,
-    T: PartialEq + Eq + Clone;
+    T: PartialEq + Eq + Clone {
+    nodes: Vec<Node<Q, T>>,
+    index: usize,
+}
 
 impl<Q, T> Nodes<Q, T>
 where
@@ -477,7 +480,10 @@ where
     /// let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
     /// ```
     pub fn new(nodes: Vec<Node<Q, T>>) -> Self {
-        Nodes(nodes)
+        Nodes{
+            nodes,
+            index: 0
+        }
     }
 
     /// Get an iterator over the nodes in the tree.
@@ -500,7 +506,7 @@ where
     /// }
     /// ```
     pub fn iter(&self) -> Iter<Node<Q, T>> {
-        self.0.iter()
+        self.nodes.iter()
     }
 
     /// Get the number of nodes in the tree.
@@ -520,7 +526,7 @@ where
     /// assert_eq!(nodes.len(), 1);
     /// ```
     pub fn len(&self) -> usize {
-        self.0.len()
+        self.nodes.len()
     }
 
     /// Check if the tree is empty.
@@ -531,7 +537,7 @@ where
     ///
     /// `true` if the tree is empty, `false` otherwise.
     pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.nodes.is_empty()
     }
 
     /// Get a node at the specified index.
@@ -555,7 +561,7 @@ where
     /// assert_eq!(nodes.get(0).unwrap().get_node_id(), 1);
     /// ```
     pub fn get(&self, index: usize) -> Option<&Node<Q, T>> {
-        self.0.get(index)
+        self.nodes.get(index)
     }
 
     /// Get a node by the node id.
@@ -579,7 +585,7 @@ where
     /// assert_eq!(nodes.get_by_node_id(&1).unwrap().get_node_id(), 1);
     /// ```
     pub fn get_by_node_id(&self, node_id: &Q) -> Option<&Node<Q, T>> {
-        self.0.iter().find(|x| &x.get_node_id() == node_id)
+        self.nodes.iter().find(|x| &x.get_node_id() == node_id)
     }
 
     /// Push a node to the nodes list.
@@ -600,7 +606,7 @@ where
     /// assert_eq!(nodes.len(), 2);
     /// ```
     pub fn push(&mut self, node: Node<Q, T>) {
-        self.0.push(node);
+        self.nodes.push(node);
     }
 
     /// Remove a node at the specified index.
@@ -626,7 +632,7 @@ where
     /// assert_eq!(nodes.len(), 0);
     /// ```
     pub fn remove(&mut self, index: usize) -> Node<Q, T> {
-        self.0.remove(index)
+        self.nodes.remove(index)
     }
 
     /// Retain only the nodes that satisfy the predicate.
@@ -653,7 +659,7 @@ where
     where
         F: FnMut(&Node<Q, T>) -> bool,
     {
-        self.0.retain(f);
+        self.nodes.retain(f);
     }
 
     /// Clear the nodes list.
@@ -670,7 +676,7 @@ where
     /// assert_eq!(nodes.len(), 0);
     /// ```
     pub fn clear(&mut self) {
-        self.0.clear();
+        self.nodes.clear();
     }
 
     /// Append the nodes from another nodes list.
@@ -692,7 +698,7 @@ where
     /// assert_eq!(nodes.len(), 2);
     /// ```
     pub fn append(&mut self, other: &mut Self) {
-        self.0.append(&mut other.0);
+        self.nodes.append(&mut other.nodes);
     }
 
     /// Append the nodes from another nodes list.
@@ -715,7 +721,7 @@ where
     /// assert_eq!(nodes.len(), 2);
     /// ```
     pub fn append_raw(&mut self, other: &mut Vec<Node<Q, T>>) {
-        self.0.append(other);
+        self.nodes.append(other);
     }
 
     /// Get the first node in the nodes list.
@@ -735,7 +741,7 @@ where
     /// assert_eq!(nodes.first().unwrap().get_node_id(), 1);
     /// ```
     pub fn first(&self) -> Option<&Node<Q, T>> {
-        self.0.first()
+        self.nodes.first()
     }
 }
 
@@ -757,7 +763,7 @@ where
 {
     /// Create a nodes list from an iterator.
     fn from_iter<I: IntoIterator<Item = Node<Q, T>>>(iter: I) -> Self {
-        Nodes(iter.into_iter().collect())
+        Nodes::new(iter.into_iter().collect())
     }
 }
 
@@ -771,12 +777,14 @@ where
     /// Get the next node in the nodes list.
     #[allow(clippy::iter_next_slice)]
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.iter().next().cloned()
+        let node = self.nodes.get(self.index).cloned();
+        self.index += 1;
+        node
     }
 
     /// Get the size hint of the nodes list.
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.iter().size_hint()
+        self.nodes.iter().size_hint()
     }
 }
 
@@ -787,7 +795,7 @@ where
 {
     /// Create an empty nodes list.
     fn default() -> Self {
-        Nodes(vec![])
+        Nodes::new(vec![])
     }
 }
 
@@ -1007,6 +1015,13 @@ mod tests {
         let mut iter = nodes.iter();
         assert_eq!(iter.next().unwrap().get_node_id(), 1);
         assert_eq!(iter.next().unwrap().get_node_id(), 2);
+    }
+    
+    #[test]
+    fn test_nodes_next() {
+        let mut nodes = Nodes::new(vec![Node::new(1, Some(2)), Node::new(2, Some(3))]);
+        assert_eq!(nodes.next().unwrap().get_node_id(), 1);
+        assert_eq!(nodes.next().unwrap().get_node_id(), 2);
     }
 
     #[test]

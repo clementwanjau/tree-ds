@@ -986,9 +986,13 @@ mod tests {
     #[test]
     fn test_tree_get_nodes() {
         let mut tree = Tree::new(Some("Sample Tree"));
-        let node = Node::new(1, Some(2));
-        tree.add_node(node.clone(), None).unwrap();
-        assert_eq!(tree.get_nodes().len(), 1);
+        let node1 = Node::new(1, Some(2));
+        let node2 = Node::new(2, Some(4));
+        let node3 = Node::new(3, Some(7));
+        let node1_id = tree.add_node(node1.clone(), None).unwrap();
+        let node2_id = tree.add_node(node2.clone(), Some(&node1_id)).unwrap();
+        let _ = tree.add_node(node3.clone(), Some(&node2_id)).unwrap();
+        assert_eq!(tree.get_nodes().len(), 3);
     }
 
     #[test]
