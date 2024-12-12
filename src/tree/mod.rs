@@ -830,7 +830,7 @@ where
 	{
 		write!(f, "{}", parent_prefix)?;
 		if is_last_child {
-			if tree.get_root_node().map_or(false, |x| x.get_node_id() == root_node.get_node_id()) {
+			if tree.get_root_node().is_some_and(|x| x.get_node_id() == root_node.get_node_id()) {
 				writeln!(f, "{}", root_node)?;
 			} else {
 				writeln!(f, "└── {}", root_node)?;
