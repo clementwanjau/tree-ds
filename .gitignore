@@ -3,3 +3,5 @@
 /examples/*/target
 /examples/*/Cargo.lock
 *.sh
+/.idea
+/.vscode
