@@ -24,7 +24,7 @@ pub enum Error {
     NodeNotFound(String),
     /// An error occurred while formatting the output.
     #[allow(clippy::enum_variant_names)]
-    #[cfg_attr(not(feature = "no_std"), error("Error: {0}"))]
+    #[cfg_attr(not(feature = "no_std"), error(transparent))]
     FmtError(FmtError),
 }
 
