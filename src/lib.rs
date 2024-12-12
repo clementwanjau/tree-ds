@@ -148,20 +148,25 @@
 extern crate alloc;
 
 mod lib {
-    #[cfg(feature = "no_std")]
-    pub use alloc::{
-        collections::BTreeSet,
-        string::{String, ToString},
-        vec,
-        vec::Vec,
-    };
-    #[cfg(all(test, feature = "no_std"))]
-        pub use alloc::format;
     #[cfg(all(feature = "no_std", not(feature = "async")))]
     pub use alloc::rc::Rc;
     #[cfg(all(feature = "no_std", feature = "async"))]
     pub use alloc::sync::Arc;
+    #[cfg(feature = "no_std")]
+    pub use alloc::{
+        collections::BTreeSet,
+        format,
+        string::{String, ToString},
+        vec,
+        vec::Vec,
+    };
 
+    #[cfg(all(test, not(feature = "no_std")))]
+    pub use std::format;
+    #[cfg(all(not(feature = "no_std"), not(feature = "async")))]
+    pub use std::rc::Rc;
+    #[cfg(all(not(feature = "no_std"), feature = "async"))]
+    pub use std::sync::Arc;
     #[cfg(not(feature = "no_std"))]
     pub use std::{
         collections::HashSet,
@@ -169,12 +174,6 @@ mod lib {
         vec,
         vec::Vec,
     };
-    #[cfg(all(test, not(feature = "no_std")))]
-    pub use std::format;
-    #[cfg(all(not(feature = "no_std"), not(feature = "async")))]
-    pub use std::rc::Rc;
-    #[cfg(all(not(feature = "no_std"), feature = "async"))]
-    pub use std::sync::Arc;
 
     pub use self::core::cell::RefCell;
     pub use self::core::clone::Clone;
@@ -201,7 +200,7 @@ mod node;
 mod tree;
 
 pub mod prelude {
-    //! A module to re-export the necessary types for the tree data structure.
+	//! A module to re-export the necessary types for the tree data structure.
 
     pub use crate::{
         node::{Node, Nodes},
@@ -209,11 +208,11 @@ pub mod prelude {
     };
 
     /// Defines the default type for the node id.
-    ///
-    /// The default type for the node id is `u128`.
-    #[cfg(feature = "auto_id")]
-    pub type AutomatedId = u128;
+	///
+	/// The default type for the node id is `u128`.
+	#[cfg(feature = "auto_id")]
+	pub type AutomatedId = u128;
 
-    /// The error type for this crate.
-    pub type Result<T> = crate::lib::Result<T, crate::error::Error>;
+	/// The error type for this crate.
+	pub type Result<T> = crate::lib::Result<T, crate::error::Error>;
 }
