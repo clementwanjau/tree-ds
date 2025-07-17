@@ -361,7 +361,7 @@ mod tests {
     fn test_nodes_display() {
         let nodes = Nodes::new(vec![Node::new(1, Some(2))]);
         #[cfg(feature = "print_node_id")]
-        assert_eq!(format!("{}", nodes), "1: 2");
+        assert_eq!(format!("{nodes}"), "1: 2");
         #[cfg(not(feature = "print_node_id"))]
         assert_eq!(format!("{nodes}"), "2");
     }

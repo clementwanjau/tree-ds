@@ -492,7 +492,7 @@ where
     ///     // Do something with the node.
     /// }
     /// ```
-    pub fn iter(&self) -> Iter<Node<Q, T>> {
+    pub fn iter(&self) -> Iter<'_, Node<Q, T>> {
         self.nodes.iter()
     }
 
