@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0
+
+- Bug Fix: Added proper thread safety to the tree structure
+  addressing issue[ #23](https://github.com/clementwanjau/tree-ds/issues/23).
+- Modified the signatures of all the Node methods to return `Result` for future-proofing.
+- Bumped the versions of the dependencies to their latest versions.
+
 ## v0.1.6
 
 - Bug fixes.

@@ -37,8 +37,8 @@ impl Display for Error {
                 f,
                 "Error: Root node already present in the tree. You cannot add another root node."
             ),
-            Error::InvalidOperation(s) => write!(f, "Error: {}", s),
-            Error::NodeNotFound(s) => write!(f, "Error: Node {} not found in the tree.", s),
+            Error::InvalidOperation(s) => write!(f, "Error: {s}"),
+            Error::NodeNotFound(s) => write!(f, "Error: Node {s} not found in the tree."),
             Error::FmtError(_) => {
                 write!(f, "Error: An error occurred while formatting the output.")
             }
@@ -49,7 +49,7 @@ impl Display for Error {
 impl Debug for Error {
     /// Formats the error message.
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 
@@ -66,14 +66,14 @@ mod tests {
     #[test]
     fn test_error_fmt() {
         let err = Error::InvalidOperation("Invalid operation".to_string());
-        assert_eq!(format!("{:?}", err), "Error: Invalid operation");
+        assert_eq!(format!("{err:?}"), "Error: Invalid operation");
     }
 
     #[test]
     fn test_error_fmt_root_node_already_present() {
         let err = Error::RootNodeAlreadyPresent;
         assert_eq!(
-            format!("{:?}", err),
+            format!("{err:?}"),
             "Error: Root node already present in the tree. You cannot add another root node."
         );
     }

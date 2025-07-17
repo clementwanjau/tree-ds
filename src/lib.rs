@@ -73,28 +73,28 @@
 //! ```rust
 //! use tree_ds::prelude::*;
 //!
-//! # fn main() -> Result<()> {
-//! let mut tree = Tree::new(Some("Sample Tree"));
-//! let root = tree.add_node(Node::new("Node 1", Some(2)), None)?;
-//! let child_1 = tree.add_node(Node::new("Node 2", Some(3)), Some(&root))?;
-//! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1))?;
-//! let child_3 = tree.add_node(Node::new("Node 4", Some(5)), Some(&child_2))?;
 //!
-//! tree.traverse(&root, TraversalStrategy::PreOrder)?
+//! let mut tree = Tree::new(Some("Sample Tree"));
+//! let root = tree.add_node(Node::new("Node 1", Some(2)), None).unwrap();
+//! let child_1 = tree.add_node(Node::new("Node 2", Some(3)), Some(&root)).unwrap();
+//! let child_2 = tree.add_node(Node::new("Node 3", Some(4)), Some(&child_1)).unwrap();
+//! let child_3 = tree.add_node(Node::new("Node 4", Some(5)), Some(&child_2)).unwrap();
+//!
+//! tree.traverse(&root, TraversalStrategy::PreOrder).unwrap()
 //!   .iter()
 //!   .for_each(|node_id| {
 //!     let node = tree.get_node_by_id(node_id).unwrap();
-//!     let cur_value = node.get_value().unwrap();
-//!     node.set_value(Some(cur_value + 1));
+//!     let cur_value = node.get_value().unwrap().unwrap();
+//!     node.set_value(Some(cur_value + 1)).unwrap();
 //! });
 //!
 //! # #[cfg(feature = "print_node_id")]
 //! # assert_eq!("Sample Tree\n***********\nNode 1: 3\n└── Node 2: 4\n    └── Node 3: 5\n        └── Node 4: 6\n", tree.to_string());
 //! # #[cfg(not(feature = "print_node_id"))]
 //! # assert_eq!("Sample Tree\n***********\n3\n└── 4\n    └── 5\n        └── 6\n", tree.to_string());
-//! # assert_eq!(tree.get_node_by_id(&root).unwrap().get_value().unwrap(), 3);
-//! # Ok(())
-//! # }
+//! # assert_eq!(tree.get_node_by_id(&root).unwrap().get_value().unwrap().unwrap(), 3);
+//!
+//!
 //! ```
 //!
 //! The newly modified tree will be:
@@ -146,6 +146,7 @@
 
 #[cfg(feature = "no_std")]
 extern crate alloc;
+extern crate core;
 
 mod lib {
     #[cfg(all(feature = "no_std", not(feature = "async")))]
@@ -160,6 +161,8 @@ mod lib {
         vec,
         vec::Vec,
     };
+    #[cfg(feature = "async")]
+    pub use spin::RwLock;
 
     #[cfg(all(test, not(feature = "no_std")))]
     pub use std::format;
@@ -175,9 +178,10 @@ mod lib {
         vec::Vec,
     };
 
+    #[cfg(not(feature = "async"))]
     pub use self::core::cell::RefCell;
     pub use self::core::clone::Clone;
-    pub use self::core::cmp::{Eq, PartialEq};
+    pub use self::core::cmp::{Eq, Ordering, PartialEq};
     pub use self::core::convert::{AsRef, From};
     pub use self::core::default::Default;
     pub use self::core::fmt::{Debug, Display, Error as FmtError, Formatter, Result as FmtResult};
@@ -200,7 +204,7 @@ mod node;
 mod tree;
 
 pub mod prelude {
-	//! A module to re-export the necessary types for the tree data structure.
+    //! A module to re-export the necessary types for the tree data structure.
 
     pub use crate::{
         node::{Node, Nodes},
@@ -208,11 +212,11 @@ pub mod prelude {
     };
 
     /// Defines the default type for the node id.
-	///
-	/// The default type for the node id is `u128`.
-	#[cfg(feature = "auto_id")]
-	pub type AutomatedId = u128;
+    ///
+    /// The default type for the node id is `u128`.
+    #[cfg(feature = "auto_id")]
+    pub type AutomatedId = u128;
 
-	/// The error type for this crate.
-	pub type Result<T> = crate::lib::Result<T, crate::error::Error>;
+    /// The error type for this crate.
+    pub type Result<T> = crate::lib::Result<T, crate::error::Error>;
 }

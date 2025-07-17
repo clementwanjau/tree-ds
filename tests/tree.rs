@@ -197,19 +197,20 @@ fn test_tree() -> Result<()> {
     let traversal = tree.traverse(&finance_manager_node, TraversalStrategy::PreOrder)?;
     traversal.iter().for_each(|node_id| {
         let node = tree.get_node_by_id(node_id).unwrap();
-        node.set_value(None);
+        node.set_value(None)
+            .expect("Error: Failed to set the value to None");
     });
 
     assert_eq!(
         tree.get_node_by_id(&finance_manager_node)
             .unwrap()
-            .get_value(),
+            .get_value()?,
         None
     );
     assert_eq!(
         tree.get_node_by_id(&finance_team_lead_node)
             .unwrap()
-            .get_value(),
+            .get_value()?,
         None
     );
     // endregion
@@ -278,114 +279,90 @@ fn test_tree_with_auto_id() -> Result<()> {
     // endregion
 
     // region:- Add nodes to the tree.
-    let managing_director_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "Managing Director".to_string(),
-                salary: 100000,
-            })),
-            None,
-        )
-        .unwrap();
-    let ceo_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "CEO".to_string(),
-                salary: 90000,
-            })),
-            Some(&managing_director_node),
-        )
-        .unwrap();
-    let cto_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "CTO".to_string(),
-                salary: 80000,
-            })),
-            Some(&ceo_node),
-        )
-        .unwrap();
-    let cfo_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "CFO".to_string(),
-                salary: 80000,
-            })),
-            Some(&ceo_node),
-        )
-        .unwrap();
-    let cmo_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "CMO".to_string(),
-                salary: 80000,
-            })),
-            Some(&ceo_node),
-        )
-        .unwrap();
-    let coo_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "COO".to_string(),
-                salary: 80000,
-            })),
-            Some(&ceo_node),
-        )
-        .unwrap();
-    let clo_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "CLO".to_string(),
-                salary: 80000,
-            })),
-            Some(&ceo_node),
-        )
-        .unwrap();
-    let operations_manager_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "Operations Manager".to_string(),
-                salary: 70000,
-            })),
-            Some(&coo_node),
-        )
-        .unwrap();
-    let finance_manager_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "Finance Manager".to_string(),
-                salary: 70000,
-            })),
-            Some(&cfo_node),
-        )
-        .unwrap();
-    let marketing_manager_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "Marketing Manager".to_string(),
-                salary: 70000,
-            })),
-            Some(&cmo_node),
-        )
-        .unwrap();
-    let legal_manager_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "Legal Manager".to_string(),
-                salary: 70000,
-            })),
-            Some(&clo_node),
-        )
-        .unwrap();
-    let tech_manager_node = tree
-        .add_node(
-            Node::new_with_auto_id(Some(Position {
-                title: "Tech Manager".to_string(),
-                salary: 70000,
-            })),
-            Some(&cto_node),
-        )
-        .unwrap();
+    let managing_director_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "Managing Director".to_string(),
+            salary: 100000,
+        })),
+        None,
+    )?;
+    let ceo_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "CEO".to_string(),
+            salary: 90000,
+        })),
+        Some(&managing_director_node),
+    )?;
+    let cto_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "CTO".to_string(),
+            salary: 80000,
+        })),
+        Some(&ceo_node),
+    )?;
+    let cfo_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "CFO".to_string(),
+            salary: 80000,
+        })),
+        Some(&ceo_node),
+    )?;
+    let cmo_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "CMO".to_string(),
+            salary: 80000,
+        })),
+        Some(&ceo_node),
+    )?;
+    let coo_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "COO".to_string(),
+            salary: 80000,
+        })),
+        Some(&ceo_node),
+    )?;
+    let clo_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "CLO".to_string(),
+            salary: 80000,
+        })),
+        Some(&ceo_node),
+    )?;
+    let operations_manager_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "Operations Manager".to_string(),
+            salary: 70000,
+        })),
+        Some(&coo_node),
+    )?;
+    let finance_manager_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "Finance Manager".to_string(),
+            salary: 70000,
+        })),
+        Some(&cfo_node),
+    )?;
+    let marketing_manager_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "Marketing Manager".to_string(),
+            salary: 70000,
+        })),
+        Some(&cmo_node),
+    )?;
+    let legal_manager_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "Legal Manager".to_string(),
+            salary: 70000,
+        })),
+        Some(&clo_node),
+    )?;
+    let tech_manager_node = tree.add_node(
+        Node::new_with_auto_id(Some(Position {
+            title: "Tech Manager".to_string(),
+            salary: 70000,
+        })),
+        Some(&cto_node),
+    )?;
 
     // The legal team under the legal manager
     let mut legal_team: Tree<AutomatedId, Position> = Tree::new(Some("Legal Team"));
@@ -527,14 +504,14 @@ fn test_tree_with_auto_id() -> Result<()> {
         let initial_nodes = deserialized_tree.get_nodes().clone();
         let marketing_team_member = initial_nodes
             .iter()
-            .find(|node| node.get_value().unwrap().title == "Marketing Team Member")
+            .find(|node| node.get_value().unwrap().unwrap().title == "Marketing Team Member")
             .unwrap();
         deserialized_tree.add_node(
             Node::new_with_auto_id(Some(Position {
                 title: "Marketing Intern".to_string(),
                 salary: 20000,
             })),
-            Some(&marketing_team_member.get_node_id()),
+            Some(&marketing_team_member.get_node_id()?),
         )?;
         assert_eq!(initial_nodes.len() + 1, deserialized_tree.get_nodes().len());
     }
@@ -544,19 +521,19 @@ fn test_tree_with_auto_id() -> Result<()> {
     let traversal = tree.traverse(&finance_manager_node, TraversalStrategy::PreOrder)?;
     traversal.iter().for_each(|node_id| {
         let node = tree.get_node_by_id(node_id).unwrap();
-        node.set_value(None);
+        node.set_value(None).unwrap();
     });
 
     assert_eq!(
         tree.get_node_by_id(&finance_manager_node)
             .unwrap()
-            .get_value(),
+            .get_value()?,
         None
     );
     assert_eq!(
         tree.get_node_by_id(&finance_team_lead_node)
             .unwrap()
-            .get_value(),
+            .get_value()?,
         None
     );
     // endregion
