@@ -26,7 +26,7 @@ serde = { version = "1.0", default-features = false, features = ["derive", "rc"]
 thiserror = "2.0"
 sequential_gen = { version = "0.1.2", default-features = false }
 lazy_static = { version = "1.5.0" }
-spin = { version = "0.10.0", features = ["rwlock"] }
+spin = { version = "0.12.1", features = ["rwlock"] }
 
 [dev-dependencies]
 serde_json = { version = "1.0" }
